@@ -1,0 +1,540 @@
+/* styles.css
+   Global stylesheet for the personal site.
+   Uses custom properties for colours and typography.
+*/
+
+/* Reset and box-sizing */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* CSS variables for colours and fonts */
+:root {
+  --carbon-black: #0b0c10;
+  --dark-grey: #1a1a1d;
+  --light-grey: #c5c6c7;
+  --matte-red: #b21e35;
+  --header-height: 60px;
+  --footer-height: 60px;
+  --font-heading: 'Montserrat', sans-serif;
+  --font-body: 'Roboto', sans-serif;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--light-grey);
+  background-color: var(--carbon-black);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+a {
+  color: var(--light-grey);
+  text-decoration: none;
+  transition: color 0.3s ease, background-color 0.3s ease;
+}
+
+/*
+ * Remove the dashed outline on focused links. The dashed outline was
+ * originally used to indicate keyboard focus but resulted in a
+ * distracting red box around links after clicking. Setting the
+ * outline to none avoids this effect while preserving hover/focus
+ * colour changes defined elsewhere.
+ */
+a:focus {
+  outline: none;
+  outline-offset: 0;
+}
+
+/* Header styles */
+.header {
+  height: var(--header-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  background-color: var(--carbon-black);
+  border-bottom: 1px solid var(--dark-grey);
+  z-index: 100;
+}
+
+.logo a {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 1.8rem;
+  color: var(--matte-red);
+}
+
+.nav ul {
+  display: flex;
+  list-style: none;
+  gap: 2rem;
+}
+
+.nav a {
+  font-family: var(--font-heading);
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+  color: var(--light-grey);
+}
+
+/* Highlight the current page's navigation link in the matte red accent. */
+.nav a.active {
+  color: var(--matte-red);
+}
+
+.nav a:hover,
+.nav a:focus {
+  color: var(--matte-red);
+}
+
+.hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 24px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.hamburger span {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background-color: var(--light-grey);
+  transition: background-color 0.3s ease;
+}
+
+.hamburger:hover span {
+  background-color: var(--matte-red);
+}
+
+/* Footer styles */
+/*
+ * Footer styles
+ * The footer should blend seamlessly with the carbon black background of
+ * the pages. Rather than colouring the entire bar red, the text and
+ * icons use the matte red accent colour by default. When hovering
+ * over the footer the copy and icons fade to the light grey/silver
+ * colour but the background remains unchanged. A subtle top border
+ * helps delineate the footer from the main content.
+ */
+.footer {
+  height: var(--footer-height);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  background-color: var(--carbon-black);
+  color: var(--matte-red);
+  font-size: 0.8rem;
+  border-top: 1px solid var(--dark-grey);
+}
+
+.footer-social {
+  display: flex;
+  gap: 1rem;
+}
+
+/* Footer social icons: default fill is dark when on the red footer.
+   The fill swaps to red when hovering the entire footer. */
+/*
+ * Default footer icon colour uses the matte red accent so the icons
+ * stand out against the carbon black footer. When the user hovers over
+ * the footer the icons transition to the light grey colour defined
+ * globally.
+ */
+.footer-social a svg {
+  width: 20px;
+  height: 20px;
+  fill: var(--matte-red);
+  transition: fill 0.3s ease;
+}
+
+/*
+ * Individual icon hover: change only the hovered social icon to the
+ * light grey/silver colour. Other icons and the copyright text
+ * remain in the matte red accent colour.
+ */
+.footer-social a:hover svg,
+.footer-social a:focus svg {
+  fill: var(--light-grey);
+}
+
+/*
+ * Remove the footer-wide hover effect. The copyright text retains
+ * the matte red accent at all times and does not react to mouse
+ * interaction. Social icons will change colour individually on
+ * hover (see rules below).
+ */
+
+/* Main container */
+main {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: calc(100vh - var(--header-height) - var(--footer-height));
+  padding: 1rem;
+}
+
+/* Home page */
+.home-container {
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+}
+
+/*
+ * Profile image styling for the landing page. On the home page the
+ * portrait should simply float on the dark background without any
+ * coloured border. Keep a slight rounding on the corners for a
+ * softer appearance.
+ */
+.profile-img {
+  max-width: 300px;
+  width: 35vw;
+  /* remove the matte red border from around the portrait */
+  border: none;
+  border-radius: 8px;
+}
+
+.home-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.home-text .greeting {
+  font-family: var(--font-heading);
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  color: var(--light-grey);
+}
+
+.home-text .name {
+  font-family: var(--font-heading);
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  color: var(--matte-red);
+  margin-bottom: 1rem;
+}
+
+.social-icons {
+  display: flex;
+  gap: 1rem;
+}
+
+.social-icons a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--matte-red);
+  border-radius: 50%;
+  color: var(--light-grey);
+  transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
+}
+
+.social-icons a svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+.social-icons a:hover,
+.social-icons a:focus {
+  background-color: var(--matte-red);
+  color: var(--carbon-black);
+  transform: translateY(-2px);
+}
+
+/* About page */
+/*
+ * Layout container for the about page. Previously this used a dark card
+ * panel with a matte red border and shadow. To satisfy the updated
+ * requirements, remove the panel styling entirely – the content floats
+ * directly on the page background. Maintain spacing and flexible
+ * alignment so the image, heading and text still present well on
+ * desktop and mobile.
+ */
+.about-card {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  /* Remove panel styling */
+  background-color: transparent;
+  padding: 1.5rem;
+  border-radius: 0;
+  box-shadow: none;
+  max-width: 900px;
+  width: 100%;
+}
+
+/*
+ * Portrait on the about page. Remove the coloured border to keep the
+ * image clean against the dark background. Preserve the rounded
+ * corners for consistency with the landing page portrait.
+ */
+.about-card img {
+  width: 40%;
+  max-width: 280px;
+  border: none;
+  border-radius: 8px;
+}
+
+.bio {
+  flex: 1;
+}
+
+.bio h2 {
+  font-family: var(--font-heading);
+  font-size: clamp(2rem, 4vw, 3rem);
+  color: var(--matte-red);
+  margin-bottom: 1rem;
+}
+
+.bio p {
+  font-size: clamp(0.9rem, 2vw, 1.1rem);
+  line-height: 1.5;
+  color: var(--light-grey);
+}
+
+/* Gallery page */
+/*
+ * Container for the gallery page. Align children centrally and
+ * allow them to take up only as much space as needed. The width is
+ * kept to 100% to ensure the heading spans the available space.
+ */
+.main-gallery {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.main-gallery h2 {
+  font-family: var(--font-heading);
+  color: var(--matte-red);
+  font-size: clamp(2rem, 4vw, 3rem);
+  margin-bottom: 1rem;
+}
+
+.gallery-grid {
+  /*
+   * The gallery grid normally filled the entire width of the page. To
+   * create a more compact, centred gallery the grid is constrained
+   * horizontally and given an aspect ratio. This ensures the six
+   * thumbnails fit neatly without stretching edge‑to‑edge. The
+   * aspect-ratio of 3/2 maintains two rows across three columns. On
+   * smaller screens the media queries below adjust the column count
+   * while still respecting the max-width and aspect ratio.
+   */
+  flex-grow: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  /* With nine images the grid now has three rows and three columns.
+     The aspect ratio is set to 1:1 so the grid forms a square. */
+  grid-template-rows: repeat(3, 1fr);
+  gap: 1rem;
+  width: 60%;
+  max-width: 600px;
+  /* Square aspect ratio for a 3×3 grid */
+  aspect-ratio: 1 / 1;
+  margin: 0 auto;
+}
+
+.gallery-grid a {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 6px;
+  /* Enable a 3D perspective for a subtle tilt/parallax effect on hover */
+  perspective: 600px;
+}
+
+.gallery-grid img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: 2px solid var(--dark-grey);
+  border-radius: 6px;
+  transition: border-color 0.3s ease, transform 0.3s ease;
+}
+
+.gallery-grid img:hover,
+.gallery-grid img:focus {
+  border-color: var(--matte-red);
+  transform: scale(1.05);
+}
+
+/* Music page */
+.music-section {
+  text-align: center;
+}
+
+.music-section h2 {
+  font-family: var(--font-heading);
+  color: var(--matte-red);
+  font-size: clamp(2rem, 4vw, 3rem);
+  margin-bottom: 0.5rem;
+}
+
+.music-section p {
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  color: var(--light-grey);
+}
+
+/* Contact page */
+.contact-section {
+  text-align: center;
+  max-width: 600px;
+}
+
+.contact-section h2 {
+  font-family: var(--font-heading);
+  color: var(--matte-red);
+  font-size: clamp(2rem, 4vw, 3rem);
+  margin-bottom: 0.5rem;
+}
+
+.contact-section p {
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  margin-bottom: 1rem;
+  color: var(--light-grey);
+}
+
+/* Divider used to separate headings from body text on About and Contact pages */
+/*
+ * Horizontal dividing line used in the About and Contact pages. The line
+ * spans the full width of its parent container so that it aligns with
+ * the width of the text block. It scales responsively with the page
+ * size. A small vertical margin separates it from adjacent headings
+ * and paragraphs.
+ */
+.divider {
+  width: 100%;
+  height: 2px;
+  background-color: var(--matte-red);
+  margin: 0.75rem 0;
+  border-radius: 1px;
+}
+
+.contact-social {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.contact-social a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--matte-red);
+  border-radius: 50%;
+  color: var(--light-grey);
+  transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
+}
+
+.contact-social a svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+.contact-social a:hover,
+.contact-social a:focus {
+  background-color: var(--matte-red);
+  color: var(--carbon-black);
+  transform: translateY(-2px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+  .about-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  .about-card img {
+    width: 60%;
+    margin-bottom: 1rem;
+  }
+  .home-container {
+    flex-direction: column;
+    text-align: center;
+  }
+  .home-text {
+    align-items: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .nav ul {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .nav {
+    position: absolute;
+    top: var(--header-height);
+    right: 0;
+    background-color: var(--dark-grey);
+    width: 200px;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    padding: 1rem;
+  }
+  .nav.active {
+    transform: translateX(0);
+  }
+  .hamburger {
+    display: flex;
+  }
+  .nav a {
+    display: block;
+    padding: 0.5rem 0;
+  }
+  /* Gallery layout on smaller screens */
+  .gallery-grid {
+    /* Maintain a 3×3 layout for nine images on smaller screens
+       while scaling the overall size down */
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    width: 80%;
+    max-width: 500px;
+    aspect-ratio: 1 / 1;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Extra small screens still keep a 3×3 grid but shrink width further */
+  .gallery-grid {
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    width: 90%;
+    max-width: 400px;
+    aspect-ratio: 1 / 1;
+  }
+}
+
+/* On very wide screens, allow the gallery to grow larger so it doesn't look sparse.
+   The width is reduced to 40% of the viewport but capped at 900px. */
+@media (min-width: 1200px) {
+  .gallery-grid {
+    width: 40%;
+    max-width: 900px;
+  }
+}
