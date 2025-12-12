@@ -1,6 +1,11 @@
-/about    /pages/about.html    200
-/gallery  /pages/gallery.html  200
-/music    /pages/music.html    200
-/contact  /pages/contact.html  200
+# Clean URLs
+/about      /about.html     200
+/gallery    /gallery.html   200
+/music      /music.html     200
+/contact    /contact.html   200
 
-/pages/*  /:splat              301
+# Trailing slashes
+/about/     /about.html     200
+/gallery/   /gallery.html   200
+/music/     /music.html     200
+/contact/   /contact.html   200
