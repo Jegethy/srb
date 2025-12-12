@@ -650,3 +650,9 @@ main {
     text-align: center;
   }
 }
+
+.about-signoff {
+  margin-top: 1.5rem;
+  font-style: italic;
+  opacity: 0.85;
+}
