@@ -1,1 +1,26 @@
-/   /pages/index.html   200
+# Rewrites for clean URLs
+/               /pages/index.html      200
+/about          /pages/about.html      200
+/gallery        /pages/gallery.html    200
+/music          /pages/music.html      200
+/contact        /pages/contact.html    200
+
+# Support trailing slashes
+/about/         /pages/about.html      200
+/gallery/       /pages/gallery.html    200
+/music/         /pages/music.html      200
+/contact/       /pages/contact.html    200
+
+# Backwards compatibility (.html at root)
+/index.html     /pages/index.html      200
+/about.html     /pages/about.html      200
+/gallery.html   /pages/gallery.html    200
+/music.html     /pages/music.html      200
+/contact.html   /pages/contact.html    200
+
+# Redirect /pages/* to clean URLs (optional but nice for SEO)
+/pages/index.html  /                301
+/pages/about.html  /about           301
+/pages/gallery.html /gallery        301
+/pages/music.html  /music           301
+/pages/contact.html /contact        301

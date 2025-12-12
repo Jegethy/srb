@@ -11,10 +11,10 @@
   <meta property="og:title" content="404 – Page Not Found" />
   <meta property="og:description" content="The page you requested does not exist." />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://example.com/404.html" />
-  <meta property="og:image" content="../assets/images/profile/profile.png" />
+  <meta property="og:url" content="https://scottblackmore.com/404" />
+  <meta property="og:image" content="https://scottblackmore.com/assets/images/profile/profile.png" />
   <!-- Canonical URL to avoid duplicate content issues -->
-  <link rel="canonical" href="https://example.com/404.html" />
+  <link rel="canonical" href="https://scottblackmore.com/404" />
   <title>404 – Page Not Found</title>
   <!-- Preconnect for Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -25,7 +25,7 @@
     rel="stylesheet"
   />
   <!-- Shared stylesheet -->
-  <link rel="stylesheet" href="../styles.css" />
+  <link rel="stylesheet" href="/styles.css" />
   <!-- Google Analytics integration -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-5WFGHP1K36"></script>
   <script>
@@ -39,14 +39,14 @@
 <body>
   <!-- Shared header -->
   <header class="header">
-    <div class="logo"><a href="index.html">SB</a></div>
+    <div class="logo"><a href="/">SB</a></div>
     <nav class="nav">
       <ul>
-        <li><a href="index.html">Home</a></li>
-        <li><a href="about.html">About</a></li>
-        <li><a href="gallery.html">Gallery</a></li>
-        <li><a href="music.html">Music</a></li>
-        <li><a href="contact.html">Contact</a></li>
+        <li><a href="/">Home</a></li>
+        <li><a href="/about">About</a></li>
+        <li><a href="/gallery">Gallery</a></li>
+        <li><a href="/music">Music</a></li>
+        <li><a href="/contact">Contact</a></li>
       </ul>
     </nav>
     <div class="hamburger" aria-label="Menu" tabindex="0">
@@ -60,13 +60,13 @@
     <!-- Layout splits the page into an image and a content area with a divider -->
     <div class="error-layout">
       <div class="error-img">
-        <img src="../assets/images/error/error_portrait.png" alt="Confused portrait illustration" />
+        <img src="/assets/images/error/error_portrait.png" alt="Confused portrait illustration" />
       </div>
       <div class="error-divider"></div>
       <div class="error-content">
         <h1 class="error-code">404</h1>
         <p class="error-message">The page you’re looking for doesn’t exist.</p>
-        <a href="index.html" class="button">Go Home</a>
+        <a href="/" class="button">Go Home</a>
       </div>
     </div>
   </main>
@@ -111,6 +111,6 @@
   </footer>
 
   <!-- Load scripts relative to the pages directory -->
-  <script src="../main.js"></script>
+  <script src="/main.js"></script>
 </body>
 </html>
