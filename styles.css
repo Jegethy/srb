@@ -651,8 +651,21 @@ main {
   }
 }
 
+.bio p {
+  margin-bottom: 1.2rem;
+  line-height: 1.7;
+}
+
+.bio-intro {
+  font-size: 1.05rem;
+}
+
+.bio-music {
+  opacity: 0.95;
+}
+
 .about-signoff {
-  margin-top: 1.5rem;
+  margin-top: 1.8rem;
   font-style: italic;
   opacity: 0.85;
 }
