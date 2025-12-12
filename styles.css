@@ -538,3 +538,115 @@ main {
     max-width: 900px;
   }
 }
+
+/* ------------------------------------------------------------------
+   Error page styles
+
+   These classes are used on the 404.html and 500.html pages. They
+   centre the content vertically and horizontally and provide a
+   consistent appearance that matches the rest of the site. The button
+   inherits the accent colour and inverts on hover for an inviting
+   call‑to‑action.  */
+
+.error-page {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.error-container {
+  max-width: 600px;
+  width: 80%;
+}
+
+.error-code {
+  font-family: var(--font-heading);
+  font-size: clamp(4rem, 10vw, 8rem);
+  color: var(--matte-red);
+  margin-bottom: 0.5rem;
+}
+
+.error-message {
+  font-size: clamp(1rem, 3vw, 1.5rem);
+  color: var(--light-grey);
+  margin-bottom: 2rem;
+}
+
+.button {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  border: 2px solid var(--matte-red);
+  border-radius: 4px;
+  color: var(--light-grey);
+  text-decoration: none;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  font-family: var(--font-heading);
+  font-weight: 600;
+}
+
+.button:hover,
+.button:focus {
+  background-color: var(--matte-red);
+  color: var(--carbon-black);
+}
+
+/*
+ * Error page split layout
+ *
+ * The error pages (404 and 500) display an illustration on the left and the error
+ * message on the right with a vertical divider. On smaller screens the
+ * layout stacks vertically and hides the divider for better readability.
+ */
+
+.error-layout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80%;
+  max-width: 900px;
+  margin: 0 auto;
+  gap: 0;
+}
+
+.error-img {
+  flex: 0 0 40%;
+  max-width: 40%;
+}
+
+.error-img img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+
+.error-divider {
+  width: 2px;
+  background-color: var(--matte-red);
+  /* Stretch divider to match the height of the layout */
+  align-self: stretch;
+  margin: 0 2rem;
+}
+
+.error-content {
+  flex: 1;
+  text-align: left;
+}
+
+@media (max-width: 768px) {
+  .error-layout {
+    flex-direction: column;
+  }
+  .error-img {
+    max-width: 60%;
+    margin-bottom: 1.5rem;
+  }
+  .error-divider {
+    display: none;
+  }
+  .error-content {
+    text-align: center;
+  }
+}
