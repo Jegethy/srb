@@ -24,8 +24,12 @@ INSTAGRAM_PASSWORD = os.environ.get("INSTA_PASSWORD")
 TARGET_PROFILE = INSTAGRAM_USERNAME
 
 MAX_POSTS_TO_SCAN = 30
-
 GALLERY_MAX_ITEMS = 9
+
+# Throttling behaviour
+PROFILE_LOAD_MAX_RETRIES = 6
+PROFILE_LOAD_BACKOFF_BASE_SECONDS = 20
+PROFILE_LOAD_BACKOFF_CAP_SECONDS = 15 * 60
 
 logging.basicConfig(
     level=logging.INFO,
@@ -70,10 +74,7 @@ def download_image(url: str, dest: Path):
 
 
 def build_gallery_items_from_local_files():
-    """
-    Builds items for main.js that work from /pages/gallery.html.
-    Those pages reference assets with ../assets/...
-    """
+
     items = []
 
     for img_path in IMAGES_DIR.glob("*.jpg"):
@@ -97,10 +98,7 @@ def build_gallery_items_from_local_files():
 
 
 def update_main_js_items_block():
-    """
-    Rewrites ONLY the `const items = [...]` block inside main.js.
-    Leaves everything else unchanged.
-    """
+
     if not MAIN_JS.exists():
         logging.error("main.js not found at %s", MAIN_JS)
         return
@@ -139,13 +137,71 @@ def update_main_js_items_block():
     logging.info("main.js updated: %s", MAIN_JS)
 
 
+def is_throttle_error(exc: Exception) -> bool:
+
+    msg = str(exc)
+    needles = [
+        "Please wait a few minutes",
+        "401 Unauthorized",
+        "429",
+        "Too Many Requests",
+        "rate limited",
+    ]
+    return any(n in msg for n in needles)
+
+
+def backoff_sleep(attempt: int):
+
+    base = PROFILE_LOAD_BACKOFF_BASE_SECONDS * (2 ** attempt)
+    seconds = min(PROFILE_LOAD_BACKOFF_CAP_SECONDS, base) + random.randint(0, 20)
+    logging.warning("Instagram throttling detected. Backing off for %d seconds...", seconds)
+    time.sleep(seconds)
+
+
+def login_with_session(L: instaloader.Instaloader) -> bool:
+
+    # Try existing session first
+    try:
+        L.load_session_from_file(INSTAGRAM_USERNAME)
+        logging.info("Loaded existing Instagram session for %s", INSTAGRAM_USERNAME)
+        return True
+    except Exception:
+        logging.info("No saved session found (or failed to load). Attempting fresh login...")
+
+    # Fresh login
+    try:
+        L.login(INSTAGRAM_USERNAME, INSTAGRAM_PASSWORD)
+        L.save_session_to_file()
+        logging.info("Logged in and saved new Instagram session.")
+        return True
+    except Exception as e:
+        logging.error("Instagram login failed: %s", e)
+        return False
+
+
+def load_profile_with_backoff(L: instaloader.Instaloader):
+
+    last_exc = None
+    for attempt in range(PROFILE_LOAD_MAX_RETRIES):
+        try:
+            return Profile.from_username(L.context, TARGET_PROFILE)
+        except Exception as e:
+            last_exc = e
+            if is_throttle_error(e):
+                backoff_sleep(attempt)
+                continue
+            raise
+
+    logging.error("Failed to load profile after retries due to throttling: %s", last_exc)
+    return None
+
 # ============= WHERE THE MAGIC HAPPENS =============
 
 def main():
     ensure_dirs()
 
     if not INSTAGRAM_USERNAME or not INSTAGRAM_PASSWORD:
-        logging.error("Missing INSTA_USERNAME / INSTA_PASSWORD environment variables. Idiot.")
+        logging.error("Missing INSTA_USERNAME / INSTA_PASSWORD environment variables.")
         return
 
     logging.info("Starting Instagram sync for: %s", TARGET_PROFILE)
@@ -159,13 +215,12 @@ def main():
         compress_json=False
     )
 
-    try:
-        L.login(INSTAGRAM_USERNAME, INSTAGRAM_PASSWORD)
-    except Exception as e:
-        logging.error("Instagram login failed: %s", e)
+    if not login_with_session(L):
         return
 
-    profile = Profile.from_username(L.context, TARGET_PROFILE)
+    profile = load_profile_with_backoff(L)
+    if profile is None:
+        return
 
     known = load_state()
     new_shortcodes = []
@@ -192,6 +247,10 @@ def main():
             txt_path.write_text(caption, encoding="utf-8")
             known.add(shortcode)
         except Exception as e:
+            # If throttled mid-run, bail out
+            if is_throttle_error(e):
+                logging.warning("Throttled while downloading. Stopping this run: %s", e)
+                break
             logging.error("Failed downloading %s: %s", shortcode, e)
 
     save_state(known)
@@ -199,7 +258,6 @@ def main():
     update_main_js_items_block()
 
     logging.info("Done. New posts this run: %d", len(new_shortcodes))
-
 
 if __name__ == "__main__":
     main()

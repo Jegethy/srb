@@ -1,3 +1,14 @@
+# Instaloader sessions (never commit)
+session-*
+*.session
+
+# Your local sync state/logs
 .instagram_state.json
 .instagram_sync.log
+
+# Local runner (contains secrets - NEVER COMMIT, LIKE EVER)
 run_instagram_gallery_auto.bat
+
+# Local scripts
+create_instaloader_session.bat
+create_instaloader_session.py
