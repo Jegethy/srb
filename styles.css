@@ -688,184 +688,188 @@ main {
 /* ------------------------------------------------------------------
    Music page styles
 
-   The following rules apply to the music page (music.html). They provide a
-   responsive layout for the now playing section and the top artists/tracks
-   lists. By appending these styles here, the music page stays consistent
-   with the rest of the site's design while keeping all CSS in a single
-   stylesheet.
+   The music page displays a "Now Playing" section along with lists of
+   top artists and tracks for the past 30 days. These styles define
+   responsive layouts, ensure long names wrap gracefully, and size
+   images consistently. The page centres its content within the
+   available viewport and supports both large desktop monitors and
+   smaller mobile screens.
 */
 
-/* Container for the entire music content. Centrally aligned and sized to
-   fit within the viewport without introducing scrollbars (header and footer
-   are fixed). */
+/* Container that wraps all music content. Constrains width and
+   centres the block in the available space. */
 .music-container {
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+  padding-top: 2rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
   gap: 1.5rem;
-  width: 100%;
-  max-width: 900px;
-  margin: 0 auto;
 }
 
-/* Section containing the now playing details. */
+/* Now Playing block */
 .now-playing-block {
   width: 100%;
-  display: flex;
-  justify-content: center;
+  text-align: center;
 }
 
-/* Wraps the album art and the textual info. */
+.now-playing-block h3 {
+  font-family: var(--font-heading);
+  color: var(--matte-red);
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+  margin-bottom: 1rem;
+}
+
+/* Layout for album art and track info */
 .now-playing-content {
   display: flex;
-  flex-direction: row;
   align-items: center;
+  justify-content: center;
   gap: 1.5rem;
+  flex-wrap: wrap;
 }
 
-/* Now playing album artwork. Its size scales with the viewport while
-   maintaining a reasonable minimum and maximum. */
+/* Album art sizing; scales with viewport but stays within limits */
 .now-playing-content img {
   width: clamp(150px, 25vw, 250px);
   height: clamp(150px, 25vw, 250px);
   object-fit: cover;
-  border: 2px solid var(--matte-red);
   border-radius: 4px;
+  border: 2px solid var(--matte-red);
 }
 
-/* Container for the song title, artist and play count. */
+/* Container for song and artist details */
 .now-playing-info {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.25rem;
+  flex: 1;
+  text-align: left;
+  min-width: 200px;
 }
 
-/* "Now Playing" label – uses the light grey accent so it stands apart
-   from the song title. */
+/* Inline label for the now playing section. Smaller than the main song title
+   and aligned with the track info. */
 .now-playing-label {
   font-family: var(--font-heading);
-  color: var(--light-grey);
-  font-size: 1.1rem;
-}
-
-/* Song title styling. Uses a clamp to scale the font based on the screen
-   width while capping it within sensible limits. */
-.song-title {
-  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: clamp(1rem, 2.5vw, 1.5rem);
   color: var(--matte-red);
-  font-size: clamp(1.5rem, 4vw, 2.5rem);
-  font-weight: 700;
+  margin-bottom: 0.25rem;
 }
 
-/* Artist name styling. */
-.artist-name {
+/* Song title styling; allow long titles to wrap and prevent overflow */
+.now-playing-info .song-title {
   font-family: var(--font-heading);
-  color: var(--light-grey);
-  font-size: clamp(1.2rem, 3vw, 2rem);
+  font-weight: 700;
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  color: var(--matte-red);
+  margin-bottom: 0.25rem;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
-/* Display for the play count. Uses the body font for a subtle look. */
-.play-count {
-  font-family: var(--font-body);
+/* Artist name */
+.now-playing-info .artist-name {
+  font-size: clamp(1rem, 2.5vw, 1.5rem);
   color: var(--light-grey);
-  font-size: clamp(0.9rem, 2vw, 1.2rem);
-  font-style: italic;
+  margin-bottom: 0.25rem;
+  font-weight: 400;
 }
 
-/* Block that houses the two lists of top artists/tracks. Align items side
-   by side on larger screens and stack them on small screens. */
+/* Play count */
+.now-playing-info .play-count {
+  font-size: clamp(0.8rem, 2vw, 1rem);
+  color: var(--light-grey);
+  opacity: 0.85;
+}
+
+/* Wrapper for the two top lists */
 .top-artists-blocks {
   display: flex;
-  justify-content: space-between;
-  gap: 2rem;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 3rem;
+  flex-wrap: wrap;
   width: 100%;
 }
 
-/* Individual list containers. */
+/* Individual top list block */
 .top-artists-block {
-  flex: 1;
+  flex: 1 1 280px;
+  min-width: 260px;
 }
 
-/* Headings above each list. */
 .top-artists-block h3 {
   font-family: var(--font-heading);
   color: var(--matte-red);
-  font-size: 1.4rem;
-  margin-bottom: 1rem;
+  font-size: clamp(1.2rem, 3vw, 1.8rem);
+  margin-bottom: 0.75rem;
+  text-align: center;
 }
 
-/* List styling: remove bullets and reset margin/padding. */
-.top-artists-block ul {
+/* Reset list styles */
+#top-artists-month,
+#top-tracks-month {
   list-style: none;
-  padding: 0;
   margin: 0;
+  padding: 0;
 }
 
-/* Each item in the top lists: align image and text horizontally. */
-.top-artists-block li {
+/* List item styles for top artists and tracks */
+#top-artists-month li,
+#top-tracks-month li {
   display: flex;
   align-items: center;
-  margin-bottom: 0.8rem;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
 }
 
-/* Thumbnail images for artists and tracks. */
-.top-artists-block li img {
+/* Thumbnail image within top lists */
+#top-artists-month li img,
+#top-tracks-month li img {
   width: 40px;
   height: 40px;
   object-fit: cover;
-  border: 1px solid var(--dark-grey);
   border-radius: 4px;
-  margin-right: 0.6rem;
+  border: 1px solid var(--dark-grey);
+  flex-shrink: 0;
 }
 
-/* Text next to each thumbnail. */
-.top-artists-block li span {
+/* Text within top lists; allow wrapping and avoid overflow */
+#top-artists-month li span,
+#top-tracks-month li span {
+  flex: 1;
+  font-size: clamp(0.9rem, 2vw, 1.2rem);
   color: var(--light-grey);
-  font-size: 1rem;
   word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
-/* Wrapper for the Last.fm link at the bottom of the page. */
+/* Wrapper around the Last.fm link */
 .lastfm-link-wrapper {
+  width: 100%;
+  text-align: center;
   margin-top: 2rem;
 }
 
-/* Button linking to the user's Last.fm profile. */
+/* Styled button linking to Last.fm */
 .lastfm-button {
   display: inline-block;
-  padding: 0.75rem 1.5rem;
-  border: 2px solid var(--matte-red);
+  padding: 0.8rem 1.8rem;
+  background-color: var(--matte-red);
+  color: var(--carbon-black);
   border-radius: 4px;
-  color: var(--light-grey);
-  background-color: transparent;
   font-family: var(--font-heading);
   font-weight: 600;
+  font-size: clamp(0.9rem, 2vw, 1.1rem);
   transition: background-color 0.3s ease, color 0.3s ease;
+  cursor: pointer;
 }
 
 .lastfm-button:hover,
 .lastfm-button:focus {
-  background-color: var(--matte-red);
+  background-color: var(--light-grey);
   color: var(--carbon-black);
-}
-
-/* Media queries for responsive behaviour */
-@media (max-width: 768px) {
-  .top-artists-blocks {
-    flex-direction: column;
-    align-items: center;
-  }
-  .top-artists-block {
-    width: 100%;
-  }
-  .now-playing-content {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-  .now-playing-info {
-    align-items: center;
-  }
 }
