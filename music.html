@@ -68,11 +68,12 @@
       <!-- Removed the redundant page title to keep the layout clean -->
       <!-- Now playing section -->
       <div class="now-playing-block">
-        <h3>Now Playing</h3>
         <div class="now-playing-content">
           <!-- Album art displays either the current track's artwork or a fallback image when idle -->
           <img id="now-playing-art" src="" alt="Album art" loading="lazy" decoding="async" />
           <div class="now-playing-info">
+            <!-- Inline label for the current track; integrated into the info block -->
+            <p class="now-playing-label">Now Playing</p>
             <p id="now-playing-song" class="song-title">Loading…</p>
             <p id="now-playing-artist" class="artist-name"></p>
             <!-- Total play count will be injected here when available -->
@@ -213,7 +214,12 @@
                 }
               }
             }
+            // Ensure we use HTTPS and avoid referrer leakage for album art
+            if (albumArt && albumArt.startsWith('http://')) {
+              albumArt = albumArt.replace('http://', 'https://');
+            }
             artEl.src = albumArt || DEFAULT_ALBUM_ART;
+            artEl.referrerPolicy = 'no-referrer';
             artEl.alt = ((nowTrack.name || '') + ' cover').trim();
             const trackName = nowTrack.name || '';
             songEl.textContent = trackName;
@@ -298,7 +304,12 @@
                 }
               }
             }
+            // Ensure we use HTTPS and avoid sending a referrer; some CDNs block referrers
+            if (artUrl && artUrl.startsWith('http://')) {
+              artUrl = artUrl.replace('http://', 'https://');
+            }
             img.src = artUrl || DEFAULT_ALBUM_ART;
+            img.referrerPolicy = 'no-referrer';
             img.alt = `${artist.name} picture`;
             img.loading = 'lazy';
             img.decoding = 'async';
@@ -352,7 +363,12 @@
                 }
               }
             }
+            // Ensure we use HTTPS and avoid sending a referrer; some CDNs block referrers
+            if (artUrl && artUrl.startsWith('http://')) {
+              artUrl = artUrl.replace('http://', 'https://');
+            }
             img.src = artUrl || DEFAULT_ALBUM_ART;
+            img.referrerPolicy = 'no-referrer';
             img.alt = `${track.name} artwork`;
             img.loading = 'lazy';
             img.decoding = 'async';

@@ -748,6 +748,16 @@ main {
   min-width: 200px;
 }
 
+/* Inline label for the now playing section. Smaller than the main song title
+   and aligned with the track info. */
+.now-playing-label {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: clamp(1rem, 2.5vw, 1.5rem);
+  color: var(--matte-red);
+  margin-bottom: 0.25rem;
+}
+
 /* Song title styling; allow long titles to wrap and prevent overflow */
 .now-playing-info .song-title {
   font-family: var(--font-heading);
