@@ -220,74 +220,101 @@
        Replace `YOUR_LASTFM_API_KEY` and `YOUR_LASTFM_USERNAME` with your Last.fm API credentials.
        The script queries the recent tracks and top artists endpoints to populate the page. -->
   <script>
+    // Set your Last.fm API credentials directly so the page can fetch data without user edits.
+    // Using explicit values avoids confusion when deploying the site and ensures the API calls
+    // use the correct key and username supplied by the user. If you wish to keep these
+    // values private in production, consider loading them from environment variables or
+    // a separate configuration file instead of embedding them in the HTML.
     const lastFmApiKey = '6cc37d0e3b551d58e09ec9e482a4d230';
     const lastFmUser = 'Jegethy';
+    // Embed a small placeholder image for cases where no album art is available or the
+    // API fails. Using a data URI prevents 404 errors and removes the need for an
+    // external file on the server.
+    const DEFAULT_ALBUM_ART = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABAAAAAQACAIAAADwf7zUAADFHGNhQlgAAMUcanVtYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvpqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjM2YzRkMDllLTA2ZDAtNDI2ZS05ZjdkLWFiNTE1N2U4YmNmOAAAAAHBanVtYgAAAClqdW1kYzJhcwARABCAAACqADibcQNjMnBhLmFzc2VydGlvbnMAAAAA5Wp1bWIAAAApanVtZGNib3IAEQAQgAAAqgA4m3EDYzJwYS5hY3Rpb25zLnYyAAAAALRjYm9yoWdhY3Rpb25zgqNmYWN0aW9ubGMycGEuY3JlYXRlZG1zb2Z0d2FyZUFnZW50v2RuYW1lZkdQVC00b/9xZGlnaXRhbFNvdXJjZVR5cGV4Rmh0dHA6Ly9jdi5pcHRjLm9yZy9uZXdzY29kZXMvZGlnaXRhbHNvdXJjZXR5cGUvdHJhaW5lZEFsZ29yaXRobWljTWVkaWGhZmFjdGlvbm5jMnBhLmNvbnZlcnRlZAAAAKtqdW1iAAAAKGp1bWRjYm9yABEAEIAAAKoAOJtxA2MycGEuaGFzaC5kYXRhAAAAAHtjYm9ypWpleGNsdXNpb25zgaJlc3RhcnQYIWZsZW5ndGgZNyxkbmFtZW5qdW1iZiBtYW5pZmVzdGNhbGdmc2hhMjU2ZGhhc2hYIF3eAJ54SVm4nZDEdvDb6iQMjL4MfH94uboglhIb5mapY3BhZEgAAAAAAAAAAAAAAe1qdW1iAAAAJ2p1bWRjMmNsABEAEIAAAKoAOJtxA2MycGEuY2xhaW0udjIAAAABvmNib3Kmamluc3RhbmNlSUR4LHhtcDppaWQ6YjE1NzczNDEtNjFlOC00OGQ0LWFjMjktZmJhOWY5YzhiN2ZldGNsYWltX2dlbmVyYXRvcl9pbmZvv2RuYW1lZ0NoYXRHUFR3b3JnLmNvbnRlbnRhdXRoLmMycGFfcnNlMC4wLjD/aXNpZ25hdHVyZXhNc2VsZiNqdW1iZj0vYzJwYS91cm46YzJwYTozNmM0ZDA5ZS0wNmQwLTQyNmUtOWY3ZC1hYjUxNTdlOGJjZjgvYzJwYS5zaWduYXR1cmVyY3JlYXRlZF9hc3NlcnRpb25zgqJjdXJseCpzZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmFjdGlvbnMudjJkaGFzaFggj06jKi2a0YnaYj1JQTJA/fXaKbmaViQasY2WYTITPLWiY3VybHgpc2VsZiNqdW1iZj1jMnBhLmFzc2VydGlvbnMvYzJwYS5oYXNoLmRhdGFkaGFzaFgg0P+YvOKMVTxvwU+hkdwGimqlwHJjsR6cCqyXB4weEDloZGM6dGl0bGVpaW1hZ2UucG5nY2FsZ2ZzaGEyNTYAADL9anVtYgAAAChqdW1kYzJjcwARABCAAACqADibcQNjMnBhLnNpZ25hdHVyZQAAADLNY2JvctKEWQfBogEmGCGCWQM3MIIDMzCCAhugAwIBAgIUbq4oo+7FuOQqNvod5kEVrmIWGzswDQYJKoZIhvcNAQEMBQAwSjEaMBgGA1UEAwwRV2ViQ2xhaW1TaWduaW5nQ0ExDTALBgNVBAsMBExlbnMxEDAOBgNVBAoMB1RydWVwaWMxCzAJBgNVBAYTAlVTMB4XDTI1MDExMzIwMzY0NloXDTI2MDExMzIwMzY0NVowVjELMAkGA1UEBhMCVVMxDzANBgNVBAoMBk9wZW5BSTEQMA4GA1UECwwHQ2hhdEdQVDEkMCIGA1UEAwwbVHJ1ZXBpYyBMZW5zIENMSSBpbiBDaGF0R1BUMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEVh14xypQD33uBMgU9aukdnuL7dOjIz3VpkIz2UwpCUIxMAhLpTWV6JHjLvDamqOsAQruAtmJXwzVLbsuFpo36KOBzzCBzDAMBgNVHRMBAf8EAjAAMB8GA1UdIwQYMBaAFFofa2bTlOewQYN9nAx7XcVzS0uzME0GCCsGAQUFBwEBBEEwPzA9BggrBgEFBQcwAYYxaHR0cDovL3ZhLnRydWVwaWMuY29tL2VqYmNhL3B1YmxpY3dlYi9zdGF0dXMvb2NzcDAdBgNVHSUEFjAUBggrBgEFBQcDBAYIKwYBBQUHAyQwHQYDVR0OBBYEFMpeEy4sGzWibWJFTTNDBWLsk/gqMA4GA1UdDwEB/wQEAwIHgDANBgkqhkiG9w0BAQwFAAOCAQEAeWg+ez3jguHZXbm4bruh1xJE0JcUKfUHUy3T9/qn0/I94RHpAuJHGtOR82heKf3qzXyKXu3rRh/w5kFKudwDaaqvxVpD2UXLAK+N9Nxqr02LLYybAJ8z04PrvS3pWKY3F5PvoV5nxA9DpHbJVSBJBt+xGo2atxcCGn0DenxkH7pRhqD+nYFivtypiEnuwNH8JrUbjRPJa07iMEfe9I7UEfsXPCisg0hxTFlMZPJkxqzqA6OvS71q+KQqg2qTzuZljF2JIQs1lWyROHBwZS2lZbruxqDTLu+uva49Rgq9XwQV9CeaEO+aRKW2QQgp/S+IQJK8Lv0U1GN3qWhnDxgBylkEfj';
 
-    async function fetchNowPlaying() {
+    function fetchNowPlaying() {
       // Grab DOM references once so they can be reused throughout the function
       const songEl = document.getElementById('now-playing-song');
       const artistEl = document.getElementById('now-playing-artist');
       const artEl = document.getElementById('now-playing-art');
-      try {
-        // Request multiple recent tracks so that we can reliably determine
-        // which track is currently playing. The API may return either a
-        // single track object or an array of track objects depending on
-        // how many scrobbles exist. To minimise issues we request up to
-        // five recent tracks.
-        const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${lastFmUser}&limit=5&api_key=${lastFmApiKey}&format=json`;
-        const response = await fetch(url);
-        if (!response.ok) {
-          // If the endpoint returns a 403/404 it usually means the user's
-          // recent tracks are private or there are CORS restrictions. Gracefully
-          // degrade by showing placeholder text instead of throwing an error.
-          if (response.status === 403 || response.status === 404) {
-            songEl.textContent = 'No track playing';
-            artistEl.textContent = '';
-            artEl.src = '/assets/images/default-album.png';
-            return;
-          }
-          throw new Error('Network response was not ok');
-        }
-        const data = await response.json();
-        // Pull out the array of tracks. The API sometimes returns a single
-        // track object rather than an array when only one item exists.
-        let tracks = [];
-        if (data.recenttracks && data.recenttracks.track) {
-          const t = data.recenttracks.track;
-          tracks = Array.isArray(t) ? t : [t];
-        }
-        // Look for a track marked as currently playing. Last.fm uses the
-        // @attr.nowplaying flag to identify the currently playing track.
-        let nowTrack = tracks.find(tr => tr['@attr'] && tr['@attr'].nowplaying === 'true');
-        // If no track is flagged as now playing, fall back to the most
-        // recent track returned by the API.
-        if (!nowTrack) {
-          nowTrack = tracks[0];
-        }
-        if (nowTrack) {
-          const images = nowTrack.image || [];
-          const albumArt = images.length ? images[images.length - 1]['#text'] : '';
-          artEl.src = albumArt || '/assets/images/default-album.png';
-          artEl.alt = ((nowTrack.name || '') + ' cover').trim();
-          songEl.textContent = nowTrack.name || '';
-          const artistName = (nowTrack.artist && (nowTrack.artist['#text'] || nowTrack.artist.name)) || '';
-          artistEl.textContent = artistName;
-        } else {
-          // If there are no recent tracks at all, indicate that no track is playing.
-          songEl.textContent = 'No track playing';
-          artistEl.textContent = '';
-          artEl.src = '/assets/images/default-album.png';
-        }
-      } catch (error) {
-        // In the event of any network error (including CORS or other fetch
-        // failures), degrade gracefully by showing placeholder data instead of
-        // surfacing an error to the user. This avoids showing an error message
-        // on the page when the API call fails.
-        console.error('Error fetching now playing data:', error);
+      // Define a unique callback name for this JSONP request
+      const callbackName = `lastFmCallback_${Date.now()}`;
+      // Define a timeout so that if the script fails to load we still update the UI
+      const timeout = setTimeout(() => {
+        console.warn('Last.fm JSONP request timed out');
         songEl.textContent = 'No track playing';
         artistEl.textContent = '';
-        artEl.src = '/assets/images/default-album.png';
-      }
+        artEl.src = DEFAULT_ALBUM_ART;
+        // Clean up the callback in case it fires later
+        delete window[callbackName];
+      }, 8000);
+      // Create the callback function that will be invoked by the JSONP response
+      window[callbackName] = function(data) {
+        clearTimeout(timeout);
+        try {
+          // Pull out the array of tracks. The API sometimes returns a single
+          // track object rather than an array when only one item exists.
+          let tracks = [];
+          if (data.recenttracks && data.recenttracks.track) {
+            const t = data.recenttracks.track;
+            tracks = Array.isArray(t) ? t : [t];
+          }
+          // Look for a track marked as currently playing. Last.fm uses the
+          // @attr.nowplaying flag to identify the currently playing track.
+          let nowTrack = tracks.find(tr => tr['@attr'] && tr['@attr'].nowplaying === 'true');
+          // If no track is flagged as now playing, fall back to the most
+          // recent track returned by the API.
+          if (!nowTrack) {
+            nowTrack = tracks[0];
+          }
+          if (nowTrack) {
+            const images = nowTrack.image || [];
+            const albumArt = images.length ? images[images.length - 1]['#text'] : '';
+            artEl.src = albumArt || DEFAULT_ALBUM_ART;
+            artEl.alt = ((nowTrack.name || '') + ' cover').trim();
+            songEl.textContent = nowTrack.name || '';
+            const artistName = (nowTrack.artist && (nowTrack.artist['#text'] || nowTrack.artist.name)) || '';
+            artistEl.textContent = artistName;
+          } else {
+            // If there are no recent tracks at all, indicate that no track is playing.
+            songEl.textContent = 'No track playing';
+            artistEl.textContent = '';
+            artEl.src = DEFAULT_ALBUM_ART;
+          }
+        } catch (error) {
+          console.error('Error parsing Last.fm JSONP response:', error);
+          songEl.textContent = 'No track playing';
+          artistEl.textContent = '';
+          artEl.src = DEFAULT_ALBUM_ART;
+        } finally {
+          // Clean up: remove the script tag and callback after execution
+          delete window[callbackName];
+          const script = document.getElementById(callbackName);
+          if (script) {
+            script.remove();
+          }
+        }
+      };
+      // Construct the JSONP URL. We request multiple recent tracks so that we can
+      // reliably determine which track is currently playing. The callback name
+      // is passed to the API so that the response wraps the JSON in a
+      // function call.
+      const base = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${lastFmUser}&limit=5&api_key=${lastFmApiKey}&format=json`;
+      const jsonpUrl = `${base}&callback=${callbackName}`;
+      // Create and append the script element to initiate the JSONP request
+      const script = document.createElement('script');
+      script.id = callbackName;
+      script.src = jsonpUrl;
+      script.onerror = function() {
+        clearTimeout(timeout);
+        console.error('Error loading Last.fm JSONP script');
+        songEl.textContent = 'No track playing';
+        artistEl.textContent = '';
+        artEl.src = DEFAULT_ALBUM_ART;
+        delete window[callbackName];
+        script.remove();
+      };
+      document.body.appendChild(script);
     }
 
     async function fetchTopArtists(period, elementId, limit = 5) {
