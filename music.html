@@ -202,7 +202,17 @@
           }
           if (nowTrack) {
             const images = nowTrack.image || [];
-            const albumArt = images.length ? images[images.length - 1]['#text'] : '';
+            let albumArt = '';
+            if (Array.isArray(images) && images.length) {
+              // Iterate from largest to smallest size and pick the first non-empty URL
+              for (let i = images.length - 1; i >= 0; i--) {
+                const url = images[i]['#text'];
+                if (url) {
+                  albumArt = url;
+                  break;
+                }
+              }
+            }
             artEl.src = albumArt || DEFAULT_ALBUM_ART;
             artEl.alt = ((nowTrack.name || '') + ' cover').trim();
             const trackName = nowTrack.name || '';
@@ -277,7 +287,17 @@
             // Create image element for the artist
             const img = document.createElement('img');
             const images = artist.image || [];
-            const artUrl = images.length ? images[images.length - 1]['#text'] : '';
+            let artUrl = '';
+            // Choose the largest non-empty image from the provided sizes
+            if (Array.isArray(images) && images.length) {
+              for (let i = images.length - 1; i >= 0; i--) {
+                const url = images[i]['#text'];
+                if (url) {
+                  artUrl = url;
+                  break;
+                }
+              }
+            }
             img.src = artUrl || DEFAULT_ALBUM_ART;
             img.alt = `${artist.name} picture`;
             img.loading = 'lazy';
@@ -321,7 +341,17 @@
             // Track image
             const img = document.createElement('img');
             const images = track.image || [];
-            const artUrl = images.length ? images[images.length - 1]['#text'] : '';
+            let artUrl = '';
+            // Choose the largest non-empty image from the provided sizes
+            if (Array.isArray(images) && images.length) {
+              for (let i = images.length - 1; i >= 0; i--) {
+                const url = images[i]['#text'];
+                if (url) {
+                  artUrl = url;
+                  break;
+                }
+              }
+            }
             img.src = artUrl || DEFAULT_ALBUM_ART;
             img.alt = `${track.name} artwork`;
             img.loading = 'lazy';
