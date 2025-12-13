@@ -68,8 +68,7 @@ a:focus {
   font-family: var(--font-heading);
   font-weight: 700;
   font-size: 1.8rem;
-  /* Use the light grey to differentiate the label from the song title */
-  color: var(--light-grey);
+  color: var(--matte-red);
 }
 
 .nav ul {
@@ -684,4 +683,189 @@ main {
   color: #ff4a4a;
   opacity: 0.9;
   text-shadow: 0 0 6px rgba(255, 74, 74, 0.35);
+}
+
+/* ------------------------------------------------------------------
+   Music page styles
+
+   The following rules apply to the music page (music.html). They provide a
+   responsive layout for the now playing section and the top artists/tracks
+   lists. By appending these styles here, the music page stays consistent
+   with the rest of the site's design while keeping all CSS in a single
+   stylesheet.
+*/
+
+/* Container for the entire music content. Centrally aligned and sized to
+   fit within the viewport without introducing scrollbars (header and footer
+   are fixed). */
+.music-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* Section containing the now playing details. */
+.now-playing-block {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+/* Wraps the album art and the textual info. */
+.now-playing-content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+/* Now playing album artwork. Its size scales with the viewport while
+   maintaining a reasonable minimum and maximum. */
+.now-playing-content img {
+  width: clamp(150px, 25vw, 250px);
+  height: clamp(150px, 25vw, 250px);
+  object-fit: cover;
+  border: 2px solid var(--matte-red);
+  border-radius: 4px;
+}
+
+/* Container for the song title, artist and play count. */
+.now-playing-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+/* "Now Playing" label – uses the light grey accent so it stands apart
+   from the song title. */
+.now-playing-label {
+  font-family: var(--font-heading);
+  color: var(--light-grey);
+  font-size: 1.1rem;
+}
+
+/* Song title styling. Uses a clamp to scale the font based on the screen
+   width while capping it within sensible limits. */
+.song-title {
+  font-family: var(--font-heading);
+  color: var(--matte-red);
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  font-weight: 700;
+}
+
+/* Artist name styling. */
+.artist-name {
+  font-family: var(--font-heading);
+  color: var(--light-grey);
+  font-size: clamp(1.2rem, 3vw, 2rem);
+}
+
+/* Display for the play count. Uses the body font for a subtle look. */
+.play-count {
+  font-family: var(--font-body);
+  color: var(--light-grey);
+  font-size: clamp(0.9rem, 2vw, 1.2rem);
+  font-style: italic;
+}
+
+/* Block that houses the two lists of top artists/tracks. Align items side
+   by side on larger screens and stack them on small screens. */
+.top-artists-blocks {
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+  width: 100%;
+}
+
+/* Individual list containers. */
+.top-artists-block {
+  flex: 1;
+}
+
+/* Headings above each list. */
+.top-artists-block h3 {
+  font-family: var(--font-heading);
+  color: var(--matte-red);
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+}
+
+/* List styling: remove bullets and reset margin/padding. */
+.top-artists-block ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Each item in the top lists: align image and text horizontally. */
+.top-artists-block li {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.8rem;
+}
+
+/* Thumbnail images for artists and tracks. */
+.top-artists-block li img {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border: 1px solid var(--dark-grey);
+  border-radius: 4px;
+  margin-right: 0.6rem;
+}
+
+/* Text next to each thumbnail. */
+.top-artists-block li span {
+  color: var(--light-grey);
+  font-size: 1rem;
+  word-break: break-word;
+}
+
+/* Wrapper for the Last.fm link at the bottom of the page. */
+.lastfm-link-wrapper {
+  margin-top: 2rem;
+}
+
+/* Button linking to the user's Last.fm profile. */
+.lastfm-button {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  border: 2px solid var(--matte-red);
+  border-radius: 4px;
+  color: var(--light-grey);
+  background-color: transparent;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.lastfm-button:hover,
+.lastfm-button:focus {
+  background-color: var(--matte-red);
+  color: var(--carbon-black);
+}
+
+/* Media queries for responsive behaviour */
+@media (max-width: 768px) {
+  .top-artists-blocks {
+    flex-direction: column;
+    align-items: center;
+  }
+  .top-artists-block {
+    width: 100%;
+  }
+  .now-playing-content {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .now-playing-info {
+    align-items: center;
+  }
 }
