@@ -225,25 +225,48 @@
 
     async function fetchNowPlaying() {
       try {
-        const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${lastFmUser}&limit=1&api_key=${lastFmApiKey}&format=json`;
+        // Request multiple recent tracks so that we can reliably determine
+        // which track is currently playing. The API may return either a
+        // single track object or an array of track objects depending on
+        // how many scrobbles exist. To minimise issues we request up to
+        // five recent tracks.
+        const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${lastFmUser}&limit=5&api_key=${lastFmApiKey}&format=json`;
         const response = await fetch(url);
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
         const data = await response.json();
-        const track = data.recenttracks && data.recenttracks.track && data.recenttracks.track[0];
-        if (track) {
-          // Use the largest available image. Last.fm returns an array of image objects in ascending size order.
-          const images = track.image || [];
+        // Pull out the array of tracks. The API sometimes returns a single
+        // track object rather than an array when only one item exists.
+        let tracks = [];
+        if (data.recenttracks && data.recenttracks.track) {
+          const t = data.recenttracks.track;
+          tracks = Array.isArray(t) ? t : [t];
+        }
+        // Look for a track marked as currently playing. Last.fm uses the
+        // @attr.nowplaying flag to identify the currently playing track.
+        let nowTrack = tracks.find(tr => tr['@attr'] && tr['@attr'].nowplaying === 'true');
+        // If no track is flagged as now playing, fall back to the most
+        // recent track returned by the API.
+        if (!nowTrack) {
+          nowTrack = tracks[0];
+        }
+        const songEl = document.getElementById('now-playing-song');
+        const artistEl = document.getElementById('now-playing-artist');
+        const artEl = document.getElementById('now-playing-art');
+        if (nowTrack) {
+          const images = nowTrack.image || [];
           const albumArt = images.length ? images[images.length - 1]['#text'] : '';
-          document.getElementById('now-playing-art').src = albumArt || '/assets/images/default-album.png';
-          document.getElementById('now-playing-art').alt = (track.name || '') + ' cover';
-          document.getElementById('now-playing-song').textContent = track.name || '';
-          // Some responses nest artist name under #text, others provide name directly.
-          const artistName = (track.artist && (track.artist['#text'] || track.artist.name)) || '';
-          document.getElementById('now-playing-artist').textContent = artistName;
+          artEl.src = albumArt || '/assets/images/default-album.png';
+          artEl.alt = ((nowTrack.name || '') + ' cover').trim();
+          songEl.textContent = nowTrack.name || '';
+          const artistName = (nowTrack.artist && (nowTrack.artist['#text'] || nowTrack.artist.name)) || '';
+          artistEl.textContent = artistName;
         } else {
-          document.getElementById('now-playing-song').textContent = 'No track playing';
+          // If there are no recent tracks at all, indicate that no track is playing.
+          songEl.textContent = 'No track playing';
+          artistEl.textContent = '';
+          artEl.src = '/assets/images/default-album.png';
         }
       } catch (error) {
         console.error('Error fetching now playing data:', error);
