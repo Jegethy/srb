@@ -24,6 +24,97 @@
   />
   <link rel="stylesheet" href="/styles.css" />
 
+  <!-- Page specific styles for the music layout.
+       The music page displays a "Now Playing" section and two lists of top artists.
+       The layout is kept compact and centred so it fits within the viewport
+       alongside the fixed header and footer without introducing scrollbars. -->
+  <style>
+    /* Container that wraps all music content */
+    .music-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      width: 100%;
+      max-width: 800px;
+      /* Ensure the content is centred vertically within the available space */
+      margin: 0 auto;
+    }
+    .now-playing-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .now-playing-block h3 {
+      font-family: var(--font-heading);
+      color: var(--matte-red);
+      margin-bottom: 0.5rem;
+    }
+    .now-playing-content {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .now-playing-content img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 2px solid var(--dark-grey);
+    }
+    .now-playing-info {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .now-playing-info p {
+      margin: 0;
+      font-size: 1rem;
+      color: var(--light-grey);
+    }
+    .now-playing-info p:first-child {
+      font-weight: 500;
+      font-family: var(--font-heading);
+      color: var(--matte-red);
+    }
+    .top-artists-blocks {
+      display: flex;
+      width: 100%;
+      gap: 2rem;
+    }
+    .top-artists-block {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .top-artists-block h3 {
+      font-family: var(--font-heading);
+      color: var(--matte-red);
+      margin-bottom: 0.5rem;
+    }
+    .top-artists-block ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .top-artists-block li {
+      margin-bottom: 0.3rem;
+      font-size: 0.9rem;
+      color: var(--light-grey);
+    }
+    /* Responsive adjustment: stack the artist lists on narrow screens */
+    @media (max-width: 600px) {
+      .top-artists-blocks {
+        flex-direction: column;
+        gap: 1rem;
+      }
+    }
+  </style>
+
   <!-- Google Analytics integration -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-5WFGHP1K36"></script>
   <script>
@@ -55,9 +146,35 @@
   </header>
 
   <main class="music">
-    <div class="music-section">
+    <!-- Music content container -->
+    <div class="music-container">
       <h2>Music</h2>
-      <p>Coming soon</p>
+      <!-- Now playing section -->
+      <div class="now-playing-block">
+        <h3>Now Playing</h3>
+        <div class="now-playing-content">
+          <img id="now-playing-art" src="" alt="Album art" />
+          <div class="now-playing-info">
+            <p id="now-playing-song">Loading…</p>
+            <p id="now-playing-artist"></p>
+          </div>
+        </div>
+      </div>
+      <!-- Top artists lists -->
+      <div class="top-artists-blocks">
+        <div class="top-artists-block">
+          <h3>Top Artists (7 days)</h3>
+          <ul id="top-artists-week">
+            <li>Loading…</li>
+          </ul>
+        </div>
+        <div class="top-artists-block">
+          <h3>Top Artists (All time)</h3>
+          <ul id="top-artists-alltime">
+            <li>Loading…</li>
+          </ul>
+        </div>
+      </div>
     </div>
   </main>
 
@@ -76,7 +193,7 @@
       <a href="https://www.instagram.com/scottrblackmore" target="_blank" aria-label="Instagram"
         ><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
           <path
-            d="M8 0C5.829 0 5.556.01 4.703.048 3.85.088 3.269.222 2.76.42a3.9 3.9 0 0 0-1.417.923A3.9 3.9 0 0 0 .42 2.76C.222 3.268.087 3.85.048 4.7.01 5.555 0 5.827 0 8.001c0 2.172.01 2.444.048 3.297.04.852.174 1.433.372 1.942.205.526.478.972.923 1.417.444.445.89.719 1.416.923.51.198 1.09.333 1.942.372C5.555 15.99 5.827 16 8 16s2.444-.01 3.298-.048c.851-.04 1.434-.174 1.943-.372a3.9 3.9 0 0 0 1.416-.923c.445-.445.718-.891.923-1.417.197-.509.332-1.09.372-1.942C15.99 10.445 16 10.173 16 8s-.01-2.445-.048-3.299c-.04-.851-.175-1.433-.372-1.941a3.9 3.9 0 0 0-.923-1.417A3.9 3.9 0 0 0 13.24.42c-.51-.198-1.092-.333-1.943-.372C10.443.01 10.172 0 7.998 0zm-.717 1.442h.718c2.136 0 2.389.007 3.232.046.78.035 1.204.166 1.486.275.373.145.64.319.92.599s.453.546.598.92c.11.281.24.705.275 1.485.039.843.047 1.096.047 3.231s-.008 2.389-.047 3.232c-.035.78-.166 1.203-.275 1.485a2.5 2.5 0 0 1-.599.919c-.28.28-.546.453-.92.598-.28.11-.704.24-1.485.276-.843.038-1.096.047-3.232.047s-2.39-.009-3.233-.047c-.78-.036-1.203-.166-1.485-.276a2.5 2.5 0 0 1-.92-.598 2.5 2.5 0 0 1-.6-.92c-.109-.281-.24-.705-.275-1.485-.038-.843-.046-1.096-.046-3.233s.008-2.388.046-3.231c.036-.78.166-1.204.276-1.486.145-.373.319-.64.599-.92s.546-.453.92-.598c.282-.11.705-.24 1.485-.276.738-.034 1.024-.044 2.515-.045zm4.988 1.328a.96.96 0 1 0 0 1.92.96.96 0 0 0 0-1.92m-4.27 1.122a4.109 4.109 0 1 0 0 8.217 4.109 4.109 0 0 0 0-8.217m0 1.441a2.667 2.667 0 1 1 0 5.334 2.667 2.667 0 0 1 0-5.334"
+            d="M8 0C5.829 0 5.556.01 4.703.048 3.85.088 3.269.222 2.76.42a3.9 3.9 0 0 0-1.417.923A3.9 3.9 0 0 0 .42 2.76C.222 3.268.087 3.85.048 4.7.01 5.555 0 5.827 0 8.001c0 2.172.01 2.444.048 3.297.04.852.174 1.433.372 1.942.205.526.478.972.923 1.417.444.445.89.719 1.416.923.51.198 1.09.333 1.942.372C5.555 15.99 5.827 16 8 16s2.444-.01 3.298-.048c.851-.04 1.434-.174 1.943-.372a3.9 3.9 0 0 0 1.416-.923c.445-.445.718-.891.923-1.417.197-.509.332-1.09.372-1.942C15.99 10.445 16 10.173 16 8s-.01-2.445-.048-3.299c-.04-.851-.175-1.433-.372-1.941a3.9 3.9 0 0 0-.923-1.417A3.9 3.9 0 0 0 13.24.42c-.51-.198-1.092-.333-1.943-.372C10.443.01 10.172 0 7.998 0zm-.717 1.442h.718c2.136 0 2.389.007 3.232.046.78.035 1.204.166 1.486.275.373.145.64.319.92.599s.453.546.598.92c.11.281.24.705.275 1.485.039.843.047 1.096.047 3.231s-.008 2.389-.47 3.232c-.035.78-.166 1.203-.275 1.485a2.5 2.5 0 0 1-.599.919c-.28.28-.546.453-.92.598-.28.11-.704.24-1.485.276-.843.038-1.096.047-3.232.047s-2.39-.009-3.233-.047c-.78-.036-1.203-.166-1.485-.276a2.5 2.5 0 0 1-.92-.598 2.5 2.5 0 0 1-.6-.92c-.109-.281-.24-.705-.275-1.485-.038-.843-.046-1.096-.046-3.233s.008-2.388.046-3.231c.036-.78.166-1.204.276-1.486.145-.373.319-.64.599-.92s.546-.453.92-.598c.282-.11.705-.24 1.485-.276.738-.034 1.024-.044 2.515-.045zm4.988 1.328a.96.96 0 1 0 0 1.92.96.96 0 0 0 0-1.92m-4.27 1.122a4.109 4.109 0 1 0 0 8.217 4.109 4.109 0 0 0 0-8.217m0 1.441a2.667 2.667 0 1 1 0 5.334 2.667 2.667 0 0 1 0-5.334"
           />
         </svg>
       </a>
@@ -99,5 +216,78 @@
 
   <!-- Load scripts from the site root -->
   <script src="/main.js"></script>
+  <!-- Script to fetch and display data from Last.fm.
+       Replace `YOUR_LASTFM_API_KEY` and `YOUR_LASTFM_USERNAME` with your Last.fm API credentials.
+       The script queries the recent tracks and top artists endpoints to populate the page. -->
+  <script>
+    const lastFmApiKey = '6cc37d0e3b551d58e09ec9e482a4d230';
+    const lastFmUser = 'Jegethy';
+
+    async function fetchNowPlaying() {
+      try {
+        const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${lastFmUser}&limit=1&api_key=${lastFmApiKey}&format=json`;
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        const track = data.recenttracks && data.recenttracks.track && data.recenttracks.track[0];
+        if (track) {
+          // Use the largest available image. Last.fm returns an array of image objects in ascending size order.
+          const images = track.image || [];
+          const albumArt = images.length ? images[images.length - 1]['#text'] : '';
+          document.getElementById('now-playing-art').src = albumArt || '/assets/images/default-album.png';
+          document.getElementById('now-playing-art').alt = (track.name || '') + ' cover';
+          document.getElementById('now-playing-song').textContent = track.name || '';
+          // Some responses nest artist name under #text, others provide name directly.
+          const artistName = (track.artist && (track.artist['#text'] || track.artist.name)) || '';
+          document.getElementById('now-playing-artist').textContent = artistName;
+        } else {
+          document.getElementById('now-playing-song').textContent = 'No track playing';
+        }
+      } catch (error) {
+        console.error('Error fetching now playing data:', error);
+        document.getElementById('now-playing-song').textContent = 'Error loading now playing';
+      }
+    }
+
+    async function fetchTopArtists(period, elementId, limit = 5) {
+      try {
+        const url = `https://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user=${lastFmUser}&period=${period}&limit=${limit}&api_key=${lastFmApiKey}&format=json`;
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        const listElement = document.getElementById(elementId);
+        listElement.innerHTML = '';
+        const artists = (data.topartists && data.topartists.artist) || [];
+        if (artists.length === 0) {
+          const li = document.createElement('li');
+          li.textContent = 'No data';
+          listElement.appendChild(li);
+        } else {
+          artists.forEach(artist => {
+            const li = document.createElement('li');
+            li.textContent = artist.name;
+            listElement.appendChild(li);
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching top artists:', error);
+        const listElement = document.getElementById(elementId);
+        listElement.innerHTML = '';
+        const li = document.createElement('li');
+        li.textContent = 'Error loading data';
+        listElement.appendChild(li);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchNowPlaying();
+      fetchTopArtists('7day', 'top-artists-week', 5);
+      fetchTopArtists('overall', 'top-artists-alltime', 5);
+    });
+  </script>
 </body>
 </html>
