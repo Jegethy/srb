@@ -224,6 +224,10 @@
     const lastFmUser = 'Jegethy';
 
     async function fetchNowPlaying() {
+      // Grab DOM references once so they can be reused throughout the function
+      const songEl = document.getElementById('now-playing-song');
+      const artistEl = document.getElementById('now-playing-artist');
+      const artEl = document.getElementById('now-playing-art');
       try {
         // Request multiple recent tracks so that we can reliably determine
         // which track is currently playing. The API may return either a
@@ -233,6 +237,15 @@
         const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${lastFmUser}&limit=5&api_key=${lastFmApiKey}&format=json`;
         const response = await fetch(url);
         if (!response.ok) {
+          // If the endpoint returns a 403/404 it usually means the user's
+          // recent tracks are private or there are CORS restrictions. Gracefully
+          // degrade by showing placeholder text instead of throwing an error.
+          if (response.status === 403 || response.status === 404) {
+            songEl.textContent = 'No track playing';
+            artistEl.textContent = '';
+            artEl.src = '/assets/images/default-album.png';
+            return;
+          }
           throw new Error('Network response was not ok');
         }
         const data = await response.json();
@@ -251,9 +264,6 @@
         if (!nowTrack) {
           nowTrack = tracks[0];
         }
-        const songEl = document.getElementById('now-playing-song');
-        const artistEl = document.getElementById('now-playing-artist');
-        const artEl = document.getElementById('now-playing-art');
         if (nowTrack) {
           const images = nowTrack.image || [];
           const albumArt = images.length ? images[images.length - 1]['#text'] : '';
@@ -269,8 +279,14 @@
           artEl.src = '/assets/images/default-album.png';
         }
       } catch (error) {
+        // In the event of any network error (including CORS or other fetch
+        // failures), degrade gracefully by showing placeholder data instead of
+        // surfacing an error to the user. This avoids showing an error message
+        // on the page when the API call fails.
         console.error('Error fetching now playing data:', error);
-        document.getElementById('now-playing-song').textContent = 'Error loading now playing';
+        songEl.textContent = 'No track playing';
+        artistEl.textContent = '';
+        artEl.src = '/assets/images/default-album.png';
       }
     }
 
