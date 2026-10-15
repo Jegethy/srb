@@ -948,6 +948,18 @@ main {
   box-shadow: 0 0 10px rgba(255, 59, 85, 0.45);
 }
 
+/* The radio starts off; a slow pulse shows where to switch it on */
+.night-drive:not(.nd-radio-on) .nd-power {
+  animation: nd-power-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes nd-power-pulse {
+  50% {
+    color: #ff3b55;
+    box-shadow: 0 0 0 4px rgba(255, 59, 85, 0.2);
+  }
+}
+
 .nd-volume {
   flex: 1;
   min-width: 50px;
@@ -1287,7 +1299,8 @@ main {
   .drive-toggle:hover {
     transform: none;
   }
-  .nd-track.is-scrolling span {
+  .nd-track.is-scrolling span,
+  .night-drive:not(.nd-radio-on) .nd-power {
     animation: none;
   }
   .nd-track {
