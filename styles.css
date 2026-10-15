@@ -61,10 +61,16 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 1.5rem;
   padding: 0 1.5rem;
   background-color: var(--carbon-black);
   border-bottom: 1px solid var(--dark-grey);
   z-index: 100;
+}
+
+/* Pushes the navigation and header buttons to the right */
+.logo {
+  margin-right: auto;
 }
 
 .logo a {
@@ -94,6 +100,29 @@ a {
 .nav a:hover,
 .nav a:focus-visible {
   color: var(--matte-red);
+}
+
+/* Car icon in the header that starts the night drive */
+.drive-toggle {
+  display: inline-flex;
+  padding: 4px;
+  background: none;
+  border: 0;
+  color: var(--light-grey);
+  cursor: pointer;
+  transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.drive-toggle svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+
+.drive-toggle:hover,
+.drive-toggle:focus-visible {
+  color: var(--matte-red);
+  transform: translateX(2px);
 }
 
 .hamburger {
@@ -144,6 +173,21 @@ a {
 .footer-social {
   display: flex;
   gap: 1rem;
+}
+
+/* Deliberately quiet: the rabbit hole is for people who go looking */
+.rabbit-link {
+  margin-left: 0.5rem;
+  color: var(--light-grey);
+  opacity: 0.45;
+  font-style: italic;
+  transition: opacity 0.3s ease, color 0.3s ease;
+}
+
+.rabbit-link:hover,
+.rabbit-link:focus-visible {
+  color: var(--matte-red);
+  opacity: 1;
 }
 
 .footer-social a svg {
@@ -228,6 +272,19 @@ main {
 
 .social-icons a svg,
 .contact-social a svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+.drive-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1.75rem;
+}
+
+.drive-cta svg {
   width: 20px;
   height: 20px;
   fill: currentColor;
@@ -444,7 +501,7 @@ main {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.6rem;
 }
 
 .top-list li img {
@@ -526,10 +583,14 @@ main {
 .button {
   display: inline-block;
   padding: 0.75rem 1.5rem;
+  background: none;
   border: 2px solid var(--matte-red);
   border-radius: 4px;
+  color: var(--light-grey);
   font-family: var(--font-heading);
+  font-size: 1rem;
   font-weight: 600;
+  cursor: pointer;
 }
 
 .button:hover,
@@ -538,7 +599,350 @@ main {
   color: var(--carbon-black);
 }
 
+/*
+ * Night drive (night-drive.js)
+ * A full-screen canvas scene with a car-stereo style display along the bottom.
+ */
+.night-drive-open,
+.night-drive-open body {
+  overflow: hidden;
+}
+
+.night-drive {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background-color: #030406;
+  animation: night-drive-in 0.6s ease;
+  transition: opacity 0.3s ease;
+}
+
+.night-drive.is-closing {
+  opacity: 0;
+}
+
+@keyframes night-drive-in {
+  from { opacity: 0; }
+}
+
+.night-drive-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.night-drive-exit {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: rgba(11, 12, 16, 0.7);
+  border: 1px solid var(--matte-red);
+  border-radius: 4px;
+  color: var(--light-grey);
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.night-drive-exit:hover,
+.night-drive-exit:focus-visible {
+  background-color: var(--matte-red);
+  color: var(--carbon-black);
+}
+
+.night-drive-hint {
+  position: absolute;
+  top: 1.4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.8rem;
+  color: rgba(197, 198, 199, 0.6);
+  white-space: nowrap;
+  animation: night-drive-hint 7s ease forwards;
+}
+
+@keyframes night-drive-hint {
+  70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.night-drive-dash {
+  position: absolute;
+  left: 50%;
+  bottom: 1.5rem;
+  transform: translateX(-50%);
+  width: min(560px, calc(100% - 2rem));
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0.75rem 1rem;
+  background-color: rgba(11, 12, 16, 0.88);
+  border: 1px solid #2a2b30;
+  border-radius: 10px;
+}
+
+.night-drive-radio {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.night-drive-art {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  object-fit: cover;
+  border: 1px solid var(--matte-red);
+  border-radius: 4px;
+}
+
+/* Red LCD-style display */
+.night-drive-display {
+  flex: 1;
+  min-width: 0;
+  padding: 0.35rem 0.6rem;
+  background-color: #120507;
+  border-radius: 4px;
+  box-shadow: inset 0 0 12px rgba(178, 30, 53, 0.3);
+}
+
+.night-drive-station {
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(255, 59, 85, 0.7);
+}
+
+.night-drive-track {
+  overflow: hidden;
+  white-space: nowrap;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  color: #ff3b55;
+  text-shadow: 0 0 6px rgba(255, 59, 85, 0.6);
+}
+
+.night-drive-track span {
+  display: inline-block;
+}
+
+.night-drive-track.is-scrolling span {
+  animation: night-drive-scroll 10s linear infinite alternate;
+}
+
+@keyframes night-drive-scroll {
+  0%, 15% { transform: translateX(0); }
+  85%, 100% { transform: translateX(var(--scroll-distance)); }
+}
+
+.night-drive-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.night-drive-speed {
+  min-width: 4.5rem;
+  text-align: center;
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.night-drive-mph {
+  font-size: 1.3rem;
+}
+
+.night-drive-speed-btn {
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: 1px solid #2a2b30;
+  border-radius: 50%;
+  color: var(--light-grey);
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.night-drive-speed-btn:hover,
+.night-drive-speed-btn:focus-visible {
+  border-color: var(--matte-red);
+  color: var(--matte-red);
+}
+
+.night-drive-speed-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/*
+ * Rabbit hole (rabbit-hole.js)
+ * A small card above the footer showing the current Wikipedia article.
+ */
+.rabbit-hole {
+  position: fixed;
+  right: 1.5rem;
+  bottom: calc(var(--footer-height) + 1rem);
+  z-index: 200;
+  width: min(360px, calc(100vw - 2rem));
+  padding: 1rem 1.1rem;
+  background-color: var(--dark-grey);
+  border: 1px solid #2a2b30;
+  border-left: 3px solid var(--matte-red);
+  border-radius: 8px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  font-size: 0.9rem;
+}
+
+.rabbit-hole[hidden] {
+  display: none;
+}
+
+.rabbit-hole-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.6rem;
+}
+
+.rabbit-hole-depth {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.rabbit-hole-close {
+  background: none;
+  border: 0;
+  color: var(--light-grey);
+  cursor: pointer;
+}
+
+.rabbit-hole-close:hover,
+.rabbit-hole-close:focus-visible {
+  color: var(--matte-red);
+}
+
+.rabbit-hole-body {
+  display: flow-root;
+  transition: opacity 0.3s ease;
+}
+
+.rabbit-hole-body.is-loading {
+  opacity: 0.4;
+}
+
+.rabbit-hole-title {
+  margin-bottom: 0.4rem;
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  color: var(--matte-red);
+}
+
+.rabbit-hole-thumb {
+  float: right;
+  width: 72px;
+  height: 72px;
+  margin: 0 0 0.4rem 0.75rem;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.rabbit-hole-extract {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
+  overflow: hidden;
+  line-height: 1.5;
+}
+
+.rabbit-hole-trail:not(:empty) {
+  margin-top: 0.6rem;
+  font-size: 0.75rem;
+  font-style: italic;
+  opacity: 0.6;
+}
+
+.rabbit-hole-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.9rem;
+}
+
+.rabbit-hole-read {
+  font-size: 0.8rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.rabbit-hole-read:hover,
+.rabbit-hole-read:focus-visible {
+  color: var(--matte-red);
+}
+
+.rabbit-hole-deeper {
+  padding: 0.4rem 0.9rem;
+  background: none;
+  border: 1px solid var(--matte-red);
+  border-radius: 4px;
+  color: var(--light-grey);
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.rabbit-hole-deeper:hover,
+.rabbit-hole-deeper:focus-visible {
+  background-color: var(--matte-red);
+  color: var(--carbon-black);
+}
+
+.rabbit-hole-deeper[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: progress;
+}
+
 /* Responsive adjustments */
+@media (min-width: 1000px) {
+  /* Music page: now playing, top artists and top tracks side by side so it fits on screen */
+  .music-container {
+    max-width: 1100px;
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    column-gap: 3.5rem;
+    align-items: start;
+  }
+  .now-playing-block {
+    margin-bottom: 0;
+  }
+  .now-playing-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .now-playing-content img {
+    width: 240px;
+    height: 240px;
+  }
+  .now-playing-info .song-title {
+    font-size: 1.6rem;
+  }
+  .lastfm-link-wrapper {
+    grid-column: 1 / -1;
+    justify-self: center;
+    margin-top: 1.5rem;
+  }
+}
+
 @media (min-width: 1200px) {
   /* Let the gallery grow on wide screens so it doesn't look sparse */
   .gallery-grid {
@@ -625,6 +1029,23 @@ main {
   .now-playing-info .song-title {
     font-size: 1.6rem;
   }
+
+  .night-drive-dash {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  .night-drive-controls {
+    justify-content: center;
+  }
+  .night-drive-hint {
+    display: none;
+  }
+
+  .rabbit-hole {
+    right: 1rem;
+    bottom: 1rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -642,7 +1063,17 @@ main {
   }
   .social-icons a:hover,
   .contact-social a:hover,
-  .gallery-grid a:hover img {
+  .gallery-grid a:hover img,
+  .drive-toggle:hover {
     transform: none;
+  }
+  .night-drive-track.is-scrolling span {
+    animation: none;
+  }
+  .night-drive-track {
+    text-overflow: ellipsis;
+  }
+  .night-drive-track span {
+    display: inline;
   }
 }

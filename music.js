@@ -1,87 +1,12 @@
 // music.js
 // Fills the music page with listening data from Last.fm: the current (or most
 // recent) track, plus top artists and tracks for the last 30 days.
-//
-// Requests use JSONP (a <script> tag with a `callback` parameter) rather than
-// fetch(). Last.fm API keys are designed to be used from the browser; the
-// account's shared secret is what must stay private, and it isn't used here.
 
-const LASTFM_API_KEY = '6cc37d0e3b551d58e09ec9e482a4d230';
-const LASTFM_USER = 'Jegethy';
-const LASTFM_API_ROOT = 'https://ws.audioscrobbler.com/2.0/';
-const REQUEST_TIMEOUT_MS = 8000;
+import { lastfm, toArray, pickImage, getLatestTrack, LASTFM_USER, PLACEHOLDER_ART } from '/lastfm.js';
+
 const TOP_LIST_PERIOD = '1month';
 const TOP_LIST_LIMIT = 5;
-const PLACEHOLDER_ART = '/assets/images/music/album-placeholder.svg';
-// Last.fm no longer serves artist photos; every artist image is this grey star.
-const LASTFM_PLACEHOLDER_IMAGE_ID = '2a96cbd8b46e442fc41c2b86b821562f';
 const IDLE_MESSAGE = "It's all quiet for now…";
-
-let jsonpRequestCount = 0;
-
-/**
- * Calls a Last.fm API method via JSONP and resolves with the parsed response.
- * Rejects on network failure, timeout, or a Last.fm error payload.
- */
-function lastfm(method, params = {}) {
-  return new Promise((resolve, reject) => {
-    const callbackName = `lastfmCallback_${Date.now()}_${jsonpRequestCount++}`;
-    const query = new URLSearchParams({
-      method,
-      ...params,
-      api_key: LASTFM_API_KEY,
-      format: 'json',
-      callback: callbackName,
-    });
-    const script = document.createElement('script');
-
-    function finish(error, data) {
-      clearTimeout(timer);
-      script.remove();
-      if (error) {
-        reject(error);
-      } else {
-        resolve(data);
-      }
-    }
-
-    const timer = setTimeout(() => {
-      // A response arriving after the timeout must still find a function to call
-      window[callbackName] = () => delete window[callbackName];
-      finish(new Error(`Last.fm ${method} timed out`));
-    }, REQUEST_TIMEOUT_MS);
-
-    window[callbackName] = data => {
-      delete window[callbackName];
-      if (data && data.error) {
-        finish(new Error(`Last.fm ${method} error ${data.error}: ${data.message}`));
-      } else {
-        finish(null, data);
-      }
-    };
-    script.onerror = () => {
-      delete window[callbackName];
-      finish(new Error(`Last.fm ${method} request failed`));
-    };
-    script.src = `${LASTFM_API_ROOT}?${query}`;
-    document.head.appendChild(script);
-  });
-}
-
-// Last.fm returns a bare object instead of a one-item array in some responses.
-function toArray(value) {
-  if (!value) return [];
-  return Array.isArray(value) ? value : [value];
-}
-
-// Returns the largest usable image URL from a Last.fm image array, or ''.
-function pickImage(images) {
-  const urls = toArray(images)
-    .map(image => image['#text'])
-    .filter(url => url && !url.includes(LASTFM_PLACEHOLDER_IMAGE_ID));
-  const largest = urls[urls.length - 1];
-  return largest ? largest.replace(/^http:/, 'https:') : '';
-}
 
 function createArtwork(alt) {
   const img = document.createElement('img');
@@ -108,11 +33,9 @@ async function loadNowPlaying() {
   const playsEl = document.getElementById('now-playing-plays');
   const artEl = document.getElementById('now-playing-art');
 
-  let track;
+  let track = null;
   try {
-    const data = await lastfm('user.getrecenttracks', { user: LASTFM_USER, limit: 1 });
-    // While something is playing, it is returned first with a nowplaying flag
-    track = toArray(data.recenttracks && data.recenttracks.track)[0];
+    track = await getLatestTrack();
   } catch (error) {
     console.warn('Could not load recent tracks:', error);
   }
@@ -123,19 +46,15 @@ async function loadNowPlaying() {
     return;
   }
 
-  const trackName = track.name || '';
-  const artistName = (track.artist && (track.artist['#text'] || track.artist.name)) || '';
-  const isPlaying = Boolean(track['@attr'] && track['@attr'].nowplaying === 'true');
+  labelEl.textContent = track.isPlaying ? 'Now Playing' : 'Last Played';
+  songEl.textContent = track.name;
+  artistEl.textContent = track.artist;
+  artEl.src = track.art || PLACEHOLDER_ART;
+  artEl.alt = `${track.name} cover art`;
 
-  labelEl.textContent = isPlaying ? 'Now Playing' : 'Last Played';
-  songEl.textContent = trackName;
-  artistEl.textContent = artistName;
-  artEl.src = pickImage(track.image) || PLACEHOLDER_ART;
-  artEl.alt = `${trackName} cover art`;
-
-  if (!trackName || !artistName) return;
+  if (!track.name || !track.artist) return;
   try {
-    const info = await lastfm('track.getInfo', { artist: artistName, track: trackName, username: LASTFM_USER });
+    const info = await lastfm('track.getInfo', { artist: track.artist, track: track.name, username: LASTFM_USER });
     const plays = Number(info.track && info.track.userplaycount);
     if (plays > 0) {
       playsEl.textContent = plays === 1 ? 'Played once' : `Played ${plays.toLocaleString()} times`;

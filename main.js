@@ -30,6 +30,42 @@ document.querySelectorAll('.year').forEach(el => {
   el.textContent = new Date().getFullYear();
 });
 
+// Night drive: loaded only when someone starts one. It can be started from a
+// [data-night-drive] button, by typing "drive", or by linking to the page with #drive.
+function startNightDrive(trigger) {
+  import('/night-drive.js')
+    .then(module => module.startNightDrive(trigger))
+    .catch(error => console.error('Could not start the night drive:', error));
+}
+
+document.querySelectorAll('[data-night-drive]').forEach(button => {
+  button.addEventListener('click', () => startNightDrive(button));
+});
+
+if (location.hash === '#drive') startNightDrive(null);
+
+const SECRET_WORD = 'drive';
+let typed = '';
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey || e.metaKey || e.altKey || e.key.length !== 1) return;
+  if (e.target.closest('input, textarea, [contenteditable]')) return;
+  typed = (typed + e.key.toLowerCase()).slice(-SECRET_WORD.length);
+  if (typed === SECRET_WORD) {
+    typed = '';
+    startNightDrive(null);
+  }
+});
+
+// Rabbit hole: a random walk through Wikipedia, loaded on first use
+document.querySelectorAll('[data-rabbit-hole]').forEach(link => {
+  link.addEventListener('click', e => {
+    e.preventDefault();
+    import('/rabbit-hole.js')
+      .then(module => module.openRabbitHole(link))
+      .catch(() => window.open(link.href, '_blank', 'noopener'));
+  });
+});
+
 // Populate gallery grid dynamically if it exists
 const gallery = document.querySelector('.gallery-grid');
 if (gallery) {

@@ -10,7 +10,10 @@ A super basic HTML website, with minimal JavaScript and CSS. There is no build s
 | `*.html` | One file per page, served at clean URLs (`/about` → `about.html`). `404.html` and `500.html` are the error pages. |
 | `styles.css` | The only stylesheet, shared by every page. |
 | `main.js` | Shared behaviour: mobile menu, footer year, and the gallery grid. |
+| `lastfm.js` | Shared Last.fm helpers (JSONP requests, latest track), used by the music page and the night drive. |
 | `music.js` | Music page only: loads listening data from the Last.fm API. |
+| `night-drive.js` | The night drive: a full-screen canvas scene with a car radio showing what's playing. Loaded on demand from the header car icon, the home page button, typing "drive", or any URL ending in `#drive`. |
+| `rabbit-hole.js` | The footer's "Fall down a rabbit hole" card: a random Wikipedia article, then random links onward. Loaded on demand. |
 | `assets/images/icons.svg` | Social icon sprite, used as `<svg><use href="/assets/images/icons.svg#github" /></svg>`. |
 | `instagram_sync.py` | Local script that pulls recent Instagram posts into the gallery. |
 
