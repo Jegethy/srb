@@ -9,13 +9,18 @@
 // along it, so markings, posts and lamps stay fixed to the road and sweep
 // round bends naturally.
 
-import { getLatestTrack, PLACEHOLDER_ART } from '/lastfm.js';
+import { PLACEHOLDER_ART } from '/lastfm.js';
+import { createRadio } from '/night-drive-radio.js';
 
-const RADIO_REFRESH_MS = 30000;
 const DEFAULT_SPEED_MPH = 50;
 const MAX_SPEED_MPH = 90;
 const SPEED_STEP_MPH = 10;
+const GAUGE_MAX_MPH = 100;
+const ACCELERATION_MPH_PER_SECOND = 12;
+const BRAKING_MPH_PER_SECOND = 20;
 const MPH_TO_METRES_PER_SECOND = 0.447;
+// Steering wheel angle at the tightest bend on the track
+const MAX_WHEEL_DEGREES = 24;
 
 // World units are metres.
 const SEGMENT_LENGTH = 2;
@@ -34,7 +39,9 @@ const POST_EVERY = 13;
 const LAMP_EVERY = 45;
 // Converts the track's curve values into metres of sideways drift per segment
 const CURVE_SCALE = 0.0045;
-const HORIZON = 0.58; // fraction of the screen height
+const MAX_TRACK_CURVE = 1.4;
+// The horizon sits this fraction of the way down the view above the dashboard
+const HORIZON = 0.62;
 const SKYLINE_WIDTH = 2; // the skyline is two screens wide and wraps as the road turns
 
 const COLOURS = {
@@ -49,6 +56,30 @@ const COLOURS = {
   brightRed: '#ff3b55',
   moon: '#d9dadb',
 };
+
+// Steering wheel: rim with red stitching across the top, three spokes and an SB hub
+const WHEEL_SVG = `
+  <svg class="nd-wheel" viewBox="0 0 400 400" aria-hidden="true">
+    <path d="M38 196 C70 188 120 186 150 196 L156 238 C120 232 76 234 44 242 Z" fill="#141519" />
+    <path d="M362 196 C330 188 280 186 250 196 L244 238 C280 232 324 234 356 242 Z" fill="#141519" />
+    <path d="M176 248 L224 248 L236 370 L164 370 Z" fill="#141519" />
+    <circle cx="200" cy="200" r="168" fill="none" stroke="#111215" stroke-width="36" />
+    <circle cx="200" cy="200" r="185" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="2" />
+    <path d="M54.5 116 A168 168 0 0 1 345.5 116" fill="none" stroke="#b21e35" stroke-width="2" stroke-dasharray="4 6" opacity="0.55" />
+    <circle cx="200" cy="215" r="54" fill="#17181c" stroke="#0a0b0d" stroke-width="5" />
+    <text x="200" y="228" text-anchor="middle" font-family="Montserrat, sans-serif" font-weight="700" font-size="34" fill="#b21e35">SB</text>
+  </svg>`;
+
+const GAUGE_SVG = `
+  <svg class="nd-gauge" viewBox="0 0 120 68" aria-hidden="true">
+    <path d="M10 62 A50 50 0 0 1 110 62" fill="none" stroke="#24252b" stroke-width="5" stroke-linecap="round" />
+    <path class="nd-gauge-fill" d="M10 62 A50 50 0 0 1 110 62" fill="none" stroke="#b21e35" stroke-width="5" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100" />
+    <line class="nd-needle" x1="60" y1="62" x2="60" y2="18" stroke="#ff3b55" stroke-width="2.5" stroke-linecap="round" />
+    <circle cx="60" cy="62" r="4" fill="#ff3b55" />
+  </svg>`;
+
+const POWER_ICON = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/><path d="M4.6 3.6a5.5 5.5 0 1 0 6.8 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>';
+const NEXT_ICON = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3l6 5-6 5zM8 3l6 5-6 5z" fill="currentColor"/><rect x="13" y="3" width="1.8" height="10" fill="currentColor"/></svg>';
 
 let active = null;
 
@@ -66,36 +97,65 @@ function createDrive(trigger) {
   overlay.setAttribute('aria-modal', 'true');
   overlay.setAttribute('aria-label', 'Night drive');
   overlay.innerHTML = `
-    <canvas class="night-drive-canvas" aria-hidden="true"></canvas>
-    <button class="night-drive-exit" type="button">Pull over <span aria-hidden="true">✕</span></button>
-    <div class="night-drive-dash">
-      <div class="night-drive-radio" aria-live="polite">
-        <img class="night-drive-art" src="${PLACEHOLDER_ART}" alt="" width="56" height="56" referrerpolicy="no-referrer" />
-        <div class="night-drive-display">
-          <p class="night-drive-station">Radio</p>
-          <p class="night-drive-track"><span>Tuning in…</span></p>
+    <canvas class="nd-canvas" aria-hidden="true"></canvas>
+    <div class="nd-frame" aria-hidden="true">
+      <div class="nd-roof"></div>
+      <div class="nd-pillar nd-pillar-left"></div>
+      <div class="nd-pillar nd-pillar-right"></div>
+      <div class="nd-mirror"></div>
+    </div>
+    <button class="nd-exit" type="button">Pull over <span aria-hidden="true">✕</span></button>
+    <p class="nd-hint">${reduceMotion
+      ? 'Motion is paused to respect your reduced-motion setting'
+      : '↑ ↓ speed · M radio · N next track · Esc pull over'}</p>
+    <div class="nd-dash">
+      <div class="nd-vent nd-vent-right" aria-hidden="true"></div>
+      <div class="nd-headunit">
+        <div class="nd-headunit-screen">
+          <img class="nd-art" src="${PLACEHOLDER_ART}" alt="" width="64" height="64" referrerpolicy="no-referrer" />
+          <div class="nd-lcd" aria-live="polite">
+            <p class="nd-station-row"><span class="nd-station">SB FM</span><span class="nd-clock" aria-hidden="true"></span></p>
+            <p class="nd-track"><span>Tuning in…</span></p>
+          </div>
+        </div>
+        <div class="nd-headunit-controls">
+          <button type="button" class="nd-knob nd-power" aria-label="Radio power" aria-pressed="false">${POWER_ICON}</button>
+          <button type="button" class="nd-knob nd-next" aria-label="Next track">${NEXT_ICON}</button>
+          <input type="range" class="nd-volume" min="0" max="1" step="0.05" aria-label="Volume" />
+          <a class="nd-source" href="https://music.apple.com/" target="_blank" rel="noopener">Previews: Apple Music</a>
         </div>
       </div>
-      <div class="night-drive-controls">
-        <button type="button" class="night-drive-speed-btn" data-speed="-1" aria-label="Slow down">▼</button>
-        <p class="night-drive-speed"><span class="night-drive-mph">${reduceMotion ? 0 : DEFAULT_SPEED_MPH}</span> mph</p>
-        <button type="button" class="night-drive-speed-btn" data-speed="1" aria-label="Speed up">▲</button>
+      <div class="nd-cluster">
+        <button type="button" class="nd-speed-btn" data-speed="-1" aria-label="Slow down">▼</button>
+        <div class="nd-speedo">
+          ${GAUGE_SVG}
+          <p class="nd-readout"><span class="nd-mph">0</span> mph</p>
+        </div>
+        <button type="button" class="nd-speed-btn" data-speed="1" aria-label="Speed up">▲</button>
       </div>
+      ${WHEEL_SVG}
     </div>
-    <p class="night-drive-hint">${reduceMotion ? 'Motion is paused to respect your reduced-motion setting' : '↑ ↓ to change speed · Esc to pull over'}</p>
   `;
   document.body.appendChild(overlay);
   document.documentElement.classList.add('night-drive-open');
 
   const canvas = overlay.querySelector('canvas');
   const ctx = canvas.getContext('2d');
-  const mphEl = overlay.querySelector('.night-drive-mph');
-  const exitButton = overlay.querySelector('.night-drive-exit');
+  const dash = overlay.querySelector('.nd-dash');
+  const wheel = overlay.querySelector('.nd-wheel');
+  const needle = overlay.querySelector('.nd-needle');
+  const gaugeFill = overlay.querySelector('.nd-gauge-fill');
+  const mphEl = overlay.querySelector('.nd-mph');
+  const clockEl = overlay.querySelector('.nd-clock');
+  const exitButton = overlay.querySelector('.nd-exit');
 
   const scene = createScene();
-  let speedMph = reduceMotion ? 0 : DEFAULT_SPEED_MPH;
+  let targetMph = reduceMotion ? 0 : DEFAULT_SPEED_MPH;
+  let mph = 0;
+  let wheelAngle = 0;
   let width = 0;
   let height = 0;
+  let roadBottom = 0;
   let frame = 0;
   let lastTime = performance.now();
 
@@ -103,35 +163,61 @@ function createDrive(trigger) {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     width = window.innerWidth;
     height = window.innerHeight;
+    roadBottom = dash.getBoundingClientRect().top;
     canvas.width = Math.round(width * dpr);
     canvas.height = Math.round(height * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    if (reduceMotion) drawScene(ctx, scene, width, height);
+    if (reduceMotion) drawScene(ctx, scene, width, height, roadBottom);
+  }
+
+  function updateInstruments(dt) {
+    // Ease towards the chosen speed like a real car rather than jumping
+    const rate = targetMph > mph ? ACCELERATION_MPH_PER_SECOND : BRAKING_MPH_PER_SECOND;
+    mph += Math.sign(targetMph - mph) * Math.min(Math.abs(targetMph - mph), rate * dt);
+    const fraction = mph / GAUGE_MAX_MPH;
+    needle.setAttribute('transform', `rotate(${-90 + fraction * 180} 60 62)`);
+    gaugeFill.setAttribute('stroke-dasharray', `${fraction * 100} 100`);
+    mphEl.textContent = Math.round(mph);
+
+    // Turn the wheel with the bend under the car
+    const segment = scene.track[Math.floor(scene.position / SEGMENT_LENGTH)];
+    const target = (segment.curve / (CURVE_SCALE * MAX_TRACK_CURVE)) * MAX_WHEEL_DEGREES;
+    wheelAngle += (target - wheelAngle) * Math.min(1, dt * 3);
+    wheel.style.transform = `rotate(${wheelAngle}deg)`;
+  }
+
+  function updateClock() {
+    clockEl.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
   function tick(now) {
     // The first frame's timestamp can be slightly earlier than lastTime, so clamp at 0
     const dt = Math.max(0, Math.min((now - lastTime) / 1000, 0.1));
     lastTime = now;
-    updateScene(scene, dt, speedMph * MPH_TO_METRES_PER_SECOND);
-    drawScene(ctx, scene, width, height);
+    updateInstruments(dt);
+    updateScene(scene, dt, mph * MPH_TO_METRES_PER_SECOND);
+    drawScene(ctx, scene, width, height, roadBottom);
     frame = requestAnimationFrame(tick);
   }
 
-  function setSpeed(mph) {
-    speedMph = Math.max(0, Math.min(MAX_SPEED_MPH, mph));
-    mphEl.textContent = speedMph;
+  function setSpeed(value) {
+    targetMph = Math.max(0, Math.min(MAX_SPEED_MPH, value));
   }
 
   function onKeydown(e) {
+    if (e.target.closest && e.target.closest('input') && e.key.startsWith('Arrow')) return;
     if (e.key === 'Escape') {
       close();
     } else if (e.key === 'ArrowUp' && !reduceMotion) {
       e.preventDefault();
-      setSpeed(speedMph + SPEED_STEP_MPH);
+      setSpeed(targetMph + SPEED_STEP_MPH);
     } else if (e.key === 'ArrowDown' && !reduceMotion) {
       e.preventDefault();
-      setSpeed(speedMph - SPEED_STEP_MPH);
+      setSpeed(targetMph - SPEED_STEP_MPH);
+    } else if (e.key.toLowerCase() === 'm' && !e.ctrlKey && !e.metaKey) {
+      radio.toggle();
+    } else if (e.key.toLowerCase() === 'n' && !e.ctrlKey && !e.metaKey) {
+      radio.next();
     } else if (e.key === 'Tab') {
       trapFocus(e, overlay);
     }
@@ -139,20 +225,23 @@ function createDrive(trigger) {
 
   overlay.querySelectorAll('[data-speed]').forEach(button => {
     button.disabled = reduceMotion;
-    button.addEventListener('click', () => setSpeed(speedMph + Number(button.dataset.speed) * SPEED_STEP_MPH));
+    button.addEventListener('click', () => setSpeed(targetMph + Number(button.dataset.speed) * SPEED_STEP_MPH));
   });
   exitButton.addEventListener('click', close);
   document.addEventListener('keydown', onKeydown);
   window.addEventListener('resize', resize);
 
-  const radio = startRadio(overlay);
+  const radio = createRadio(overlay);
+  updateClock();
+  const clockTimer = setInterval(updateClock, 10000);
   resize();
   if (!reduceMotion) frame = requestAnimationFrame(tick);
   exitButton.focus();
 
   function close() {
     cancelAnimationFrame(frame);
-    clearInterval(radio);
+    clearInterval(clockTimer);
+    radio.destroy();
     document.removeEventListener('keydown', onKeydown);
     window.removeEventListener('resize', resize);
     overlay.classList.add('is-closing');
@@ -170,7 +259,7 @@ function createDrive(trigger) {
 
 // Keeps keyboard focus inside the overlay while it is open
 function trapFocus(e, container) {
-  const focusable = [...container.querySelectorAll('button:not([disabled]), a[href]')];
+  const focusable = [...container.querySelectorAll('button:not([disabled]), a[href], input')];
   if (!focusable.length) return;
   const first = focusable[0];
   const last = focusable[focusable.length - 1];
@@ -181,46 +270,6 @@ function trapFocus(e, container) {
     e.preventDefault();
     first.focus();
   }
-}
-
-// ---- Car radio ------------------------------------------------------------
-
-function startRadio(overlay) {
-  const stationEl = overlay.querySelector('.night-drive-station');
-  const trackEl = overlay.querySelector('.night-drive-track');
-  const artEl = overlay.querySelector('.night-drive-art');
-  let shown = '';
-
-  async function refresh() {
-    let track = null;
-    try {
-      track = await getLatestTrack();
-    } catch (error) {
-      console.warn('Night drive radio could not reach Last.fm:', error);
-    }
-    const text = track ? `${track.name} — ${track.artist}` : 'Just the engine and the road tonight';
-    if (text === shown) return;
-    shown = text;
-    stationEl.textContent = track ? (track.isPlaying ? 'Now playing' : 'Last played') : 'Radio off';
-    artEl.src = (track && track.art) || PLACEHOLDER_ART;
-    artEl.alt = track ? `${track.name} cover art` : '';
-
-    // Scroll long titles across the display like a car stereo
-    const span = document.createElement('span');
-    span.textContent = text;
-    trackEl.replaceChildren(span);
-    trackEl.classList.remove('is-scrolling');
-    requestAnimationFrame(() => {
-      const overflow = span.scrollWidth - trackEl.clientWidth;
-      if (overflow > 0) {
-        trackEl.style.setProperty('--scroll-distance', `${-overflow - 24}px`);
-        trackEl.classList.add('is-scrolling');
-      }
-    });
-  }
-
-  refresh();
-  return setInterval(refresh, RADIO_REFRESH_MS);
 }
 
 // ---- Track ----------------------------------------------------------------
@@ -332,12 +381,12 @@ function updateScene(scene, dt, speed) {
   scene.vehicles = scene.vehicles.filter(v => v.distance > 4 && v.distance < DRAW_DISTANCE * 0.95);
 }
 
-function drawScene(ctx, scene, w, h) {
-  const horizon = h * HORIZON;
+function drawScene(ctx, scene, w, h, roadBottom) {
+  const horizon = roadBottom * HORIZON;
   const span = Math.min(w, h * 1.45);
   const focal = span * 0.9;
-  // Camera height is chosen so the road fills about 85% of the width at the bottom of the screen
-  const cameraHeight = ((ROAD_HALF_WIDTH * 2) * (h - horizon)) / (span * 0.85);
+  // Camera height is chosen so the road fills about 80% of the width where it meets the dashboard
+  const cameraHeight = ((ROAD_HALF_WIDTH * 2) * (roadBottom - horizon)) / (span * 0.8);
 
   drawSky(ctx, scene, w, h, horizon, focal);
 
@@ -401,7 +450,7 @@ function drawScene(ctx, scene, w, h) {
   strip(-ROAD_HALF_WIDTH, ROAD_HALF_WIDTH);
 
   // Markings fade into the dark towards the horizon
-  const markings = ctx.createLinearGradient(0, horizon, 0, horizon + (h - horizon) * 0.25);
+  const markings = ctx.createLinearGradient(0, horizon, 0, horizon + (roadBottom - horizon) * 0.25);
   markings.addColorStop(0, 'rgba(197, 198, 199, 0)');
   markings.addColorStop(1, 'rgba(197, 198, 199, 0.6)');
   ctx.fillStyle = markings;
@@ -410,7 +459,7 @@ function drawScene(ctx, scene, w, h) {
   strip(edge - EDGE_LINE_WIDTH, edge);
 
   // Centre line dashes belong to fixed segments, so they follow the bend
-  const dashes = ctx.createLinearGradient(0, horizon, 0, horizon + (h - horizon) * 0.25);
+  const dashes = ctx.createLinearGradient(0, horizon, 0, horizon + (roadBottom - horizon) * 0.25);
   dashes.addColorStop(0, 'rgba(197, 198, 199, 0)');
   dashes.addColorStop(1, 'rgba(197, 198, 199, 0.95)');
   ctx.fillStyle = dashes;
@@ -420,7 +469,7 @@ function drawScene(ctx, scene, w, h) {
   }
 
   // Headlight pool on our lane just ahead
-  const pool = ctx.createRadialGradient(w / 2, h, 0, w / 2, h, (h - horizon) * 1.4);
+  const pool = ctx.createRadialGradient(w / 2, roadBottom, 0, w / 2, roadBottom, (roadBottom - horizon) * 1.4);
   pool.addColorStop(0, 'rgba(197, 198, 199, 0.12)');
   pool.addColorStop(1, 'rgba(197, 198, 199, 0)');
   ctx.fillStyle = pool;
