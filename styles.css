@@ -277,19 +277,6 @@ main {
   fill: currentColor;
 }
 
-.drive-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  margin-top: 1.75rem;
-}
-
-.drive-cta svg {
-  width: 20px;
-  height: 20px;
-  fill: currentColor;
-}
-
 .social-icons a:hover,
 .social-icons a:focus-visible,
 .contact-social a:hover,

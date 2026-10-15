@@ -268,8 +268,11 @@ function updateScene(scene, dt, speed) {
 // The road gently winds; returns a sideways offset (in screen widths) for a depth
 function curveAt(scene, z) {
   const bend = Math.sin(scene.distance * 0.004) * 0.6 + Math.sin(scene.distance * 0.0013) * 0.4;
-  const depth = 1 - NEAR_Z / z;
-  return bend * 0.22 * depth * depth;
+  // A real bend's sideways drift grows with distance, so it projects to a road
+  // that is straight close up and bends most towards the horizon. Clamped so
+  // points just behind the bottom of the screen don't swing back out.
+  const along = Math.max(0, (z - NEAR_Z) / (FAR_Z - NEAR_Z));
+  return bend * 0.18 * along;
 }
 
 function drawScene(ctx, scene, w, h) {
@@ -369,21 +372,22 @@ function drawScene(ctx, scene, w, h) {
     }
   }
 
-  // Centre dashes rush towards the viewer
+  // Centre dashes rush towards the viewer. Each is drawn as a strip of short
+  // steps so it bends with the road instead of cutting across the curve.
   const dashOffset = scene.distance % DASH_SPACING;
+  const DASH_STEPS = 6;
+  ctx.fillStyle = COLOURS.line;
   for (let z = FAR_Z - dashOffset; z > NEAR_Z * 0.6; z -= DASH_SPACING) {
     const zNear = Math.max(z - DASH_LENGTH, NEAR_Z * 0.6);
-    const far = project(0, z);
-    const near = project(0, zNear);
-    const halfFar = Math.max(0.3, far.s * 5);
-    const halfNear = Math.max(0.3, near.s * 5);
-    ctx.globalAlpha = Math.min(1, near.s * 6);
-    ctx.fillStyle = COLOURS.line;
+    const points = [];
+    for (let i = 0; i <= DASH_STEPS; i++) {
+      points.push(project(0, z + (zNear - z) * (i / DASH_STEPS)));
+    }
+    const halfWidth = p => Math.max(0.3, p.s * 5);
+    ctx.globalAlpha = Math.min(1, points[DASH_STEPS].s * 6);
     ctx.beginPath();
-    ctx.moveTo(far.x - halfFar, far.y);
-    ctx.lineTo(far.x + halfFar, far.y);
-    ctx.lineTo(near.x + halfNear, near.y);
-    ctx.lineTo(near.x - halfNear, near.y);
+    points.forEach((p, i) => (i ? ctx.lineTo(p.x - halfWidth(p), p.y) : ctx.moveTo(p.x - halfWidth(p), p.y)));
+    [...points].reverse().forEach(p => ctx.lineTo(p.x + halfWidth(p), p.y));
     ctx.fill();
   }
   ctx.globalAlpha = 1;
