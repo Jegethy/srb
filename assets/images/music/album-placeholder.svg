@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Shown on the music page while artwork loads, or when Last.fm has none. -->
+  <rect width="100" height="100" fill="#1a1a1d" />
+  <path fill="#b21e35" d="M41 30l30-6v38a8 8 0 1 1-4-6.9V34.7l-22 4.4V68a8 8 0 1 1-4-6.9z" />
+</svg>
