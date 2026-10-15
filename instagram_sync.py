@@ -1,6 +1,8 @@
 import os
 import json
 import logging
+import random
+import time
 from pathlib import Path
 from datetime import datetime
 
@@ -16,6 +18,13 @@ IMAGES_DIR = REPO_DIR / "assets" / "images" / "gallery" / "images"
 DESCS_DIR = REPO_DIR / "assets" / "images" / "gallery" / "descriptions"
 MAIN_JS = REPO_DIR / "main.js"
 
+# URL paths the site uses for the gallery files (root-relative)
+IMAGES_URL_PATH = "/assets/images/gallery/images"
+
+# main.js lines between these markers are replaced with the gallery items
+ITEMS_START_MARKER = "// gallery-items:start"
+ITEMS_END_MARKER = "// gallery-items:end"
+
 STATE_FILE = REPO_DIR / ".instagram_state.json"
 LOG_FILE = REPO_DIR / ".instagram_sync.log"
 
@@ -25,6 +34,7 @@ TARGET_PROFILE = INSTAGRAM_USERNAME
 
 MAX_POSTS_TO_SCAN = 30
 GALLERY_MAX_ITEMS = 9
+ALT_TEXT_MAX_LENGTH = 120
 
 # Throttling behaviour
 PROFILE_LOAD_MAX_RETRIES = 6
@@ -48,32 +58,48 @@ def ensure_dirs():
 
 
 def load_state():
+    """Returns {shortcode: ISO post date or None} for posts already downloaded."""
     if STATE_FILE.exists():
         try:
             data = json.loads(STATE_FILE.read_text(encoding="utf-8"))
-            return set(data.get("shortcodes", []))
+            if "posts" in data:
+                return dict(data["posts"])
+            # Older state files only stored a list of shortcodes
+            return {shortcode: None for shortcode in data.get("shortcodes", [])}
         except Exception as e:
             logging.warning("Failed to load state file: %s", e)
-    return set()
+    return {}
 
 
-def save_state(shortcodes):
+def save_state(posts):
     STATE_FILE.write_text(
-        json.dumps({"shortcodes": sorted(shortcodes)}, indent=2),
+        json.dumps({"posts": dict(sorted(posts.items()))}, indent=2),
         encoding="utf-8"
     )
 
 
 def download_image(url: str, dest: Path):
+    # Write to a temporary file first so a failed download never leaves a partial image
+    tmp = dest.with_suffix(dest.suffix + ".part")
     resp = requests.get(url, stream=True, timeout=30)
     resp.raise_for_status()
-    with dest.open("wb") as f:
+    with tmp.open("wb") as f:
         for chunk in resp.iter_content(chunk_size=8192):
             if chunk:
                 f.write(chunk)
+    tmp.replace(dest)
 
 
-def build_gallery_items_from_local_files():
+def alt_text_from_caption(caption: str) -> str:
+    first_line = next((line.strip() for line in caption.splitlines() if line.strip()), "")
+    if not first_line:
+        return "Instagram post"
+    if len(first_line) > ALT_TEXT_MAX_LENGTH:
+        first_line = first_line[:ALT_TEXT_MAX_LENGTH - 1].rstrip() + "…"
+    return first_line
+
+
+def build_gallery_items_from_local_files(posts):
 
     items = []
 
@@ -83,21 +109,23 @@ def build_gallery_items_from_local_files():
         if not desc_path.exists():
             continue
 
-        mtime = datetime.fromtimestamp(img_path.stat().st_mtime)
+        # Prefer the post date; fall back to the file time for posts synced
+        # before dates were recorded
+        posted = posts.get(shortcode)
+        sort_key = posted or datetime.fromtimestamp(img_path.stat().st_mtime).isoformat()
 
         items.append({
-            "shortcode": shortcode,
-            "src": f"../assets/images/gallery/images/{img_path.name}",
+            "src": f"{IMAGES_URL_PATH}/{img_path.name}",
             "url": f"https://www.instagram.com/p/{shortcode}/",
-            "captionPath": f"../assets/images/gallery/descriptions/{shortcode}.txt",
-            "mtime": mtime,
+            "alt": alt_text_from_caption(desc_path.read_text(encoding="utf-8")),
+            "sort_key": sort_key,
         })
 
-    items.sort(key=lambda x: x["mtime"], reverse=True)
+    items.sort(key=lambda x: x["sort_key"], reverse=True)
     return items[:GALLERY_MAX_ITEMS]
 
 
-def update_main_js_items_block():
+def update_main_js_items_block(posts):
 
     if not MAIN_JS.exists():
         logging.error("main.js not found at %s", MAIN_JS)
@@ -105,33 +133,35 @@ def update_main_js_items_block():
 
     js = MAIN_JS.read_text(encoding="utf-8")
 
-    marker_start = "const items = ["
-    idx_start = js.find(marker_start)
-    if idx_start == -1:
-        logging.error("Could not find `const items = [` in main.js")
+    idx_start = js.find(ITEMS_START_MARKER)
+    idx_end = js.find(ITEMS_END_MARKER)
+    if idx_start == -1 or idx_end == -1 or idx_end < idx_start:
+        logging.error("Could not find %s / %s markers in main.js", ITEMS_START_MARKER, ITEMS_END_MARKER)
         return
 
-    idx_array_start = idx_start + len(marker_start)
-    idx_end = js.find("];", idx_array_start)
-    if idx_end == -1:
-        logging.error("Could not find closing `];` for items array in main.js")
+    gallery_items = build_gallery_items_from_local_files(posts)
+    if not gallery_items:
+        logging.warning("No synced gallery images found; leaving main.js unchanged")
         return
-
-    gallery_items = build_gallery_items_from_local_files()
     logging.info("Updating main.js items array with %d entries", len(gallery_items))
 
-    lines = []
-    for it in gallery_items:
-        lines.append(
-            "      { "
-            f"src: '{it['src']}', "
-            f"url: '{it['url']}', "
-            f"captionPath: '{it['captionPath']}' "
-            "}"
-        )
+    # Match the indentation of the start marker line
+    line_start = js.rfind("\n", 0, idx_start) + 1
+    indent = js[line_start:idx_start]
 
-    new_block = ("\n" + "\n".join(lines) + "\n    ") if lines else "\n    "
-    updated_js = js[:idx_array_start] + new_block + js[idx_end:]
+    # json.dumps produces valid, safely escaped JavaScript string literals
+    lines = [
+        f"{indent}  {{ src: {json.dumps(it['src'])}, url: {json.dumps(it['url'])}, alt: {json.dumps(it['alt'])} }},"
+        for it in gallery_items
+    ]
+    new_block = (
+        f"{ITEMS_START_MARKER}\n"
+        f"{indent}const items = [\n"
+        + "\n".join(lines) + "\n"
+        f"{indent}];\n"
+        f"{indent}"
+    )
+    updated_js = js[:idx_start] + new_block + js[idx_end:]
 
     MAIN_JS.write_text(updated_js, encoding="utf-8")
     logging.info("main.js updated: %s", MAIN_JS)
@@ -225,14 +255,16 @@ def main():
     known = load_state()
     new_shortcodes = []
 
-    count = 0
-    for post in profile.get_posts():
+    for count, post in enumerate(profile.get_posts()):
         if MAX_POSTS_TO_SCAN is not None and count >= MAX_POSTS_TO_SCAN:
             break
-        count += 1
 
         shortcode = post.shortcode
+        if known.get(shortcode):
+            continue
         if shortcode in known:
+            # Already downloaded by an older version of this script; just record the date
+            known[shortcode] = post.date_utc.isoformat()
             continue
 
         logging.info("New post found: %s", shortcode)
@@ -245,7 +277,7 @@ def main():
             download_image(post.url, img_path)
             caption = post.caption or ""
             txt_path.write_text(caption, encoding="utf-8")
-            known.add(shortcode)
+            known[shortcode] = post.date_utc.isoformat()
         except Exception as e:
             # If throttled mid-run, bail out
             if is_throttle_error(e):
@@ -255,7 +287,7 @@ def main():
 
     save_state(known)
 
-    update_main_js_items_block()
+    update_main_js_items_block(known)
 
     logging.info("Done. New posts this run: %d", len(new_shortcodes))
 
