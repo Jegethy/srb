@@ -12,3 +12,12 @@ run_instagram_gallery_auto.bat
 # Local scripts
 create_instaloader_session.bat
 create_instaloader_session.py
+
+# Partial gallery downloads from instagram_sync.py
+*.part
+
+# Python, Node and OS clutter
+__pycache__/
+node_modules/
+.DS_Store
+Thumbs.db
