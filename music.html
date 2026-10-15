@@ -16,21 +16,16 @@
   <!-- Canonical URL to avoid duplicate content issues -->
   <link rel="canonical" href="https://scottblackmore.com/music" />
   <title>Music – Scott Blackmore</title>
+  <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Roboto:wght@300;400;500&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Roboto:wght@400;500&display=swap"
     rel="stylesheet"
   />
   <link rel="stylesheet" href="/styles.css" />
-
-  <!-- Page specific styles for the music layout.
-       The music page displays a "Now Playing" section and two lists of top artists.
-       The layout is kept compact and centred so it fits within the viewport
-       alongside the fixed header and footer without introducing scrollbars. -->
-  <style>
-    /* Music-specific styles moved to styles.css */
-  </style>
+  <script src="/main.js" defer></script>
+  <script src="/music.js" defer></script>
 
   <!-- Google Analytics integration -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-5WFGHP1K36"></script>
@@ -38,7 +33,6 @@
     window.dataLayer = window.dataLayer || [];
     function gtag() { dataLayer.push(arguments); }
     gtag('js', new Date());
-    // Configure Google Analytics with the provided measurement ID
     gtag('config', 'G-5WFGHP1K36');
   </script>
 </head>
@@ -46,57 +40,58 @@
   <!-- Shared header -->
   <header class="header">
     <div class="logo"><a href="/">SB</a></div>
-    <nav class="nav">
+    <nav class="nav" id="site-nav" aria-label="Main">
       <ul>
         <li><a href="/">Home</a></li>
         <li><a href="/about">About</a></li>
         <li><a href="/gallery">Gallery</a></li>
-        <li><a href="/music" class="active">Music</a></li>
+        <li><a href="/music" aria-current="page">Music</a></li>
         <li><a href="/contact">Contact</a></li>
       </ul>
     </nav>
-    <div class="hamburger" aria-label="Menu" tabindex="0">
+    <button class="hamburger" type="button" aria-label="Menu" aria-controls="site-nav" aria-expanded="false">
       <span></span>
       <span></span>
       <span></span>
-    </div>
+    </button>
   </header>
 
+  <!-- Content is populated from Last.fm by music.js -->
   <main class="music">
-    <!-- Music content container -->
     <div class="music-container">
-      <!-- Removed the redundant page title to keep the layout clean -->
-      <!-- Now playing section -->
       <div class="now-playing-block">
         <div class="now-playing-content">
-          <!-- Album art displays either the current track's artwork or a fallback image when idle -->
-          <img id="now-playing-art" src="" alt="Album art" loading="lazy" decoding="async" />
-          <div class="now-playing-info">
-            <!-- Inline label for the current track; integrated into the info block -->
-            <p class="now-playing-label">Now Playing</p>
+          <img
+            id="now-playing-art"
+            src="/assets/images/music/album-placeholder.svg"
+            alt=""
+            width="200"
+            height="200"
+            decoding="async"
+            referrerpolicy="no-referrer"
+          />
+          <div class="now-playing-info" aria-live="polite">
+            <p id="now-playing-label" class="now-playing-label">Now Playing</p>
             <p id="now-playing-song" class="song-title">Loading…</p>
             <p id="now-playing-artist" class="artist-name"></p>
-            <!-- Total play count will be injected here when available -->
             <p id="now-playing-plays" class="play-count"></p>
           </div>
         </div>
       </div>
-      <!-- Top artists/tracks lists -->
-      <div class="top-artists-blocks">
-        <div class="top-artists-block">
+      <div class="top-lists">
+        <div class="top-list">
           <h3>Top Artists (30 days)</h3>
           <ul id="top-artists-month">
             <li>Loading…</li>
           </ul>
         </div>
-        <div class="top-artists-block">
+        <div class="top-list">
           <h3>Top Tracks (30 days)</h3>
           <ul id="top-tracks-month">
             <li>Loading…</li>
           </ul>
         </div>
       </div>
-      <!-- See more button -->
       <div class="lastfm-link-wrapper">
         <a href="https://www.last.fm/user/Jegethy" target="_blank" rel="noopener" class="lastfm-button">See more on Last.fm</a>
       </div>
@@ -106,427 +101,14 @@
   <!-- Shared footer -->
   <footer class="footer">
     <div class="copyright">
-      © 2025 Scott Blackmore. All rights reserved.
+      © <span class="year">2026</span> Scott Blackmore. All rights reserved.
     </div>
     <div class="footer-social">
-      <a href="https://x.com/Jegethy" target="_blank" aria-label="Twitter"
-        ><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
-          <path
-            d="M5.026 15c6.038 0 9.341-5.003 9.341-9.334q.002-.211-.006-.422A6.7 6.7 0 0 0 16 3.542a6.7 6.7 0 0 1-1.889.518 3.3 3.3 0 0 0 1.447-1.817 6.5 6.5 0 0 1-2.087.793A3.286 3.286 0 0 0 7.875 6.03a9.32 9.32 0 0 1-6.767-3.429 3.29 3.29 0 0 0 1.018 4.382A3.3 3.3 0 0 1 .64 6.575v.045a3.29 3.29 0 0 0 2.632 3.218 3.2 3.2 0 0 1-.865.115 3 3 0 0 1-.614-.057 3.28 3.28 0 0 0 3.067 2.277A6.6 6.6 0 0 1 .78 13.58a6 6 0 0 1-.78-.045A9.34 9.34 0 0 0 5.026 15"
-          /></svg
-      ></a>
-      <a href="https://www.instagram.com/scottrblackmore" target="_blank" aria-label="Instagram"
-        ><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
-          <path
-            d="M8 0C5.829 0 5.556.01 4.703.048 3.85.088 3.269.222 2.76.42a3.9 3.9 0 0 0-1.417.923A3.9 3.9 0 0 0 .42 2.76C.222 3.268.087 3.85.048 4.7.01 5.555 0 5.827 0 8.001c0 2.172.01 2.444.048 3.297.04.852.174 1.433.372 1.942.205.526.478.972.923 1.417.444.445.89.719 1.416.923.51.198 1.09.333 1.942.372C5.555 15.99 5.827 16 8 16s2.444-.01 3.298-.048c.851-.04 1.434-.174 1.943-.372a3.9 3.9 0 0 0 1.416-.923c.445-.445.718-.891.923-1.417.197-.509.332-1.09.372-1.942C15.99 10.445 16 10.173 16 8s-.01-2.445-.048-3.299c-.04-.851-.175-1.433-.372-1.941a3.9 3.9 0 0 0-.923-1.417A3.9 3.9 0 0 0 13.24.42c-.51-.198-1.092-.333-1.943-.372C10.443.01 10.172 0 7.998 0zm-.717 1.442h.718c2.136 0 2.389.007 3.232.046.78.035 1.204.166 1.486.275.373.145.64.319.92.599s.453.546.598.92c.11.281.24.705.275 1.485.039.843.047 1.096.047 3.231s-.008 2.389-.47 3.232c-.035.78-.166 1.203-.275 1.485a2.5 2.5 0 0 1-.599.919c-.28.28-.546.453-.92.598-.28.11-.704.24-1.485.276-.843.038-1.096.047-3.232.047s-2.39-.009-3.233-.047c-.78-.036-1.203-.166-1.485-.276a2.5 2.5 0 0 1-.92-.598 2.5 2.5 0 0 1-.6-.92c-.109-.281-.24-.705-.275-1.485-.038-.843-.046-1.096-.046-3.233s.008-2.388.046-3.231c.036-.78.166-1.204.276-1.486.145-.373.319-.64.599-.92s.546-.453.92-.598c.282-.11.705-.24 1.485-.276.738-.034 1.024-.044 2.515-.045zm4.988 1.328a.96.96 0 1 0 0 1.92.96.96 0 0 0 0-1.92m-4.27 1.122a4.109 4.109 0 1 0 0 8.217 4.109 4.109 0 0 0 0-8.217m0 1.441a2.667 2.667 0 1 1 0 5.334 2.667 2.667 0 0 1 0-5.334"
-          />
-        </svg>
-      </a>
-      <a href="https://www.linkedin.com/" target="_blank" aria-label="LinkedIn"
-        ><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
-          <path
-            d="M0 1.146C0 .513.526 0 1.175 0h13.65C15.474 0 16 .513 16 1.146v13.708c0 .633-.526 1.146-1.175 1.146H1.175C.526 16 0 15.487 0 14.854zm4.943 12.248V6.169H2.542v7.225zm-1.2-8.212c.837 0 1.358-.554 1.358-1.248-.015-.709-.52-1.248-1.342-1.248S2.4 3.226 2.4 3.934c0 .694.521 1.248 1.327 1.248zm4.908 8.212V9.359c0-.216.016-.432.08-.586.173-.431.568-.878 1.232-.878.869 0 1.216.662 1.216 1.634v3.865h2.401V9.25c0-2.22-1.184-3.252-2.764-3.252-1.274 0-1.845.7-2.165 1.193v.025h-.016l.016-.025V6.169h-2.4c.03.678 0 7.225 0 7.225z"
-          />
-        </svg>
-      </a>
-      <a href="https://github.com/ScottBlackmore" target="_blank" aria-label="GitHub"
-        ><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
-          <path
-            d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8"
-          />
-        </svg>
-      </a>
+      <a href="https://x.com/Jegethy" target="_blank" rel="noopener" aria-label="X (Twitter)"><svg aria-hidden="true"><use href="/assets/images/icons.svg#twitter" /></svg></a>
+      <a href="https://www.instagram.com/scottrblackmore" target="_blank" rel="noopener" aria-label="Instagram"><svg aria-hidden="true"><use href="/assets/images/icons.svg#instagram" /></svg></a>
+      <a href="https://www.linkedin.com/" target="_blank" rel="noopener" aria-label="LinkedIn"><svg aria-hidden="true"><use href="/assets/images/icons.svg#linkedin" /></svg></a>
+      <a href="https://github.com/ScottBlackmore" target="_blank" rel="noopener" aria-label="GitHub"><svg aria-hidden="true"><use href="/assets/images/icons.svg#github" /></svg></a>
     </div>
   </footer>
-
-  <!-- Load scripts from the site root -->
-  <script src="/main.js"></script>
-  <!-- Script to fetch and display data from Last.fm.
-       Replace `YOUR_LASTFM_API_KEY` and `YOUR_LASTFM_USERNAME` with your Last.fm API credentials.
-       The script queries the recent tracks and top artists endpoints to populate the page. -->
-  <script>
-    // Set your Last.fm API credentials directly so the page can fetch data without user edits.
-    // Using explicit values avoids confusion when deploying the site and ensures the API calls
-    // use the correct key and username supplied by the user. If you wish to keep these
-    // values private in production, consider loading them from environment variables or
-    // a separate configuration file instead of embedding them in the HTML.
-    const lastFmApiKey = '6cc37d0e3b551d58e09ec9e482a4d230';
-    const lastFmUser = 'Jegethy';
-    // Embed a small placeholder image for cases where no album art is available or the
-    // API fails. Using a data URI prevents 404 errors and removes the need for an
-    // external file on the server.
-    const DEFAULT_ALBUM_ART = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABAAAAAQACAIAAADwf7zUAADFHGNhQlgAAMUcanVtYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvpqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjM2YzRkMDllLTA2ZDAtNDI2ZS05ZjdkLWFiNTE1N2U4YmNmOAAAAAHBanVtYgAAAClqdW1kYzJhcwARABCAAACqADibcQNjMnBhLmFzc2VydGlvbnMAAAAA5Wp1bWIAAAApanVtZGNib3IAEQAQgAAAqgA4m3EDYzJwYS5hY3Rpb25zLnYyAAAAALRjYm9yoWdhY3Rpb25zgqNmYWN0aW9ubGMycGEuY3JlYXRlZG1zb2Z0d2FyZUFnZW50v2RuYW1lZkdQVC00b/9xZGlnaXRhbFNvdXJjZVR5cGV4Rmh0dHA6Ly9jdi5pcHRjLm9yZy9uZXdzY29kZXMvZGlnaXRhbHNvdXJjZXR5cGUvdHJhaW5lZEFsZ29yaXRobWljTWVkaWGhZmFjdGlvbm5jMnBhLmNvbnZlcnRlZAAAAKtqdW1iAAAAKGp1bWRjYm9yABEAEIAAAKoAOJtxA2MycGEuaGFzaC5kYXRhAAAAAHtjYm9ypWpleGNsdXNpb25zgaJlc3RhcnQYIWZsZW5ndGgZNyxkbmFtZW5qdW1iZiBtYW5pZmVzdGNhbGdmc2hhMjU2ZGhhc2hYIF3eAJ54SVm4nZDEdvDb6iQMjL4MfH94uboglhIb5mapY3BhZEgAAAAAAAAAAAAAAe1qdW1iAAAAJ2p1bWRjMmNsABEAEIAAAKoAOJtxA2MycGEuY2xhaW0udjIAAAABvmNib3Kmamluc3RhbmNlSUR4LHhtcDppaWQ6YjE1NzczNDEtNjFlOC00OGQ0LWFjMjktZmJhOWY5YzhiN2ZldGNsYWltX2dlbmVyYXRvcl9pbmZvv2RuYW1lZ0NoYXRHUFR3b3JnLmNvbnRlbnRhdXRoLmMycGFfcnNlMC4wLjD/aXNpZ25hdHVyZXhNc2VsZiNqdW1iZj0vYzJwYS91cm46YzJwYTozNmM0ZDA5ZS0wNmQwLTQyNmUtOWY3ZC1hYjUxNTdlOGJjZjgvYzJwYS5zaWduYXR1cmVyY3JlYXRlZF9hc3NlcnRpb25zgqJjdXJseCpzZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmFjdGlvbnMudjJkaGFzaFggj06jKi2a0YnaYj1JQTJA/fXaKbmaViQasY2WYTITPLWiY3VybHgpc2VsZiNqdW1iZj1jMnBhLmFzc2VydGlvbnMvYzJwYS5oYXNoLmRhdGFkaGFzaFgg0P+YvOKMVTxvwU+hkdwGimqlwHJjsR6cCqyXB4weEDloZGM6dGl0bGVpaW1hZ2UucG5nY2FsZ2ZzaGEyNTYAADL9anVtYgAAAChqdW1kYzJjcwARABCAAACqADibcQNjMnBhLnNpZ25hdHVyZQAAADLNY2JvctKEWQfBogEmGCGCWQM3MIIDMzCCAhugAwIBAgIUbq4oo+7FuOQqNvod5kEVrmIWGzswDQYJKoZIhvcNAQEMBQAwSjEaMBgGA1UEAwwRV2ViQ2xhaW1TaWduaW5nQ0ExDTALBgNVBAsMBExlbnMxEDAOBgNVBAoMB1RydWVwaWMxCzAJBgNVBAYTAlVTMB4XDTI1MDExMzIwMzY0NloXDTI2MDExMzIwMzY0NVowVjELMAkGA1UEBhMCVVMxDzANBgNVBAoMBk9wZW5BSTEQMA4GA1UECwwHQ2hhdEdQVDEkMCIGA1UEAwwbVHJ1ZXBpYyBMZW5zIENMSSBpbiBDaGF0R1BUMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEVh14xypQD33uBMgU9aukdnuL7dOjIz3VpkIz2UwpCUIxMAhLpTWV6JHjLvDamqOsAQruAtmJXwzVLbsuFpo36KOBzzCBzDAMBgNVHRMBAf8EAjAAMB8GA1UdIwQYMBaAFFofa2bTlOewQYN9nAx7XcVzS0uzME0GCCsGAQUFBwEBBEEwPzA9BggrBgEFBQcwAYYxaHR0cDovL3ZhLnRydWVwaWMuY29tL2VqYmNhL3B1YmxpY3dlYi9zdGF0dXMvb2NzcDAdBgNVHSUEFjAUBggrBgEFBQcDBAYIKwYBBQUHAyQwHQYDVR0OBBYEFMpeEy4sGzWibWJFTTNDBWLsk/gqMA4GA1UdDwEB/wQEAwIHgDANBgkqhkiG9w0BAQwFAAOCAQEAeWg+ez3jguHZXbm4bruh1xJE0JcUKfUHUy3T9/qn0/I94RHpAuJHGtOR82heKf3qzXyKXu3rRh/w5kFKudwDaaqvxVpD2UXLAK+N9Nxqr02LLYybAJ8z04PrvS3pWKY3F5PvoV5nxA9DpHbJVSBJBt+xGo2atxcCGn0DenxkH7pRhqD+nYFivtypiEnuwNH8JrUbjRPJa07iMEfe9I7UEfsXPCisg0hxTFlMZPJkxqzqA6OvS71q+KQqg2qTzuZljF2JIQs1lWyROHBwZS2lZbruxqDTLu+uva49Rgq9XwQV9CeaEO+aRKW2QQgp/S+IQJK8Lv0U1GN3qWhnDxgBylkEfj';
-
-    async function fetchTrackPlayCount(trackName, artistName) {
-      // Fetch detailed track info to retrieve the user's play count for this track
-      const apiUrl = `https://ws.audioscrobbler.com/2.0/?method=track.getInfo&artist=${encodeURIComponent(artistName)}&track=${encodeURIComponent(trackName)}&username=${lastFmUser}&api_key=${lastFmApiKey}&format=json`;
-      try {
-        const response = await fetch(apiUrl);
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        const data = await response.json();
-        if (data && data.track && data.track.userplaycount) {
-          return data.track.userplaycount;
-        }
-      } catch (error) {
-        console.warn('Could not fetch play count:', error);
-      }
-      return null;
-    }
-
-    function fetchNowPlaying() {
-      const songEl = document.getElementById('now-playing-song');
-      const artistEl = document.getElementById('now-playing-artist');
-      const playsEl = document.getElementById('now-playing-plays');
-      const artEl = document.getElementById('now-playing-art');
-      const callbackName = `lastFmCallback_${Date.now()}`;
-      const timeout = setTimeout(() => {
-        console.warn('Last.fm JSONP request timed out');
-        songEl.textContent = "It's all quiet for now…";
-        artistEl.textContent = '';
-        playsEl.textContent = '';
-        artEl.src = DEFAULT_ALBUM_ART;
-        delete window[callbackName];
-      }, 8000);
-      window[callbackName] = async function(data) {
-        clearTimeout(timeout);
-        try {
-          let tracks = [];
-          if (data.recenttracks && data.recenttracks.track) {
-            const t = data.recenttracks.track;
-            tracks = Array.isArray(t) ? t : [t];
-          }
-          let nowTrack = tracks.find(tr => tr['@attr'] && tr['@attr'].nowplaying === 'true');
-          if (!nowTrack) {
-            nowTrack = tracks[0];
-          }
-          if (nowTrack) {
-            const images = nowTrack.image || [];
-            let albumArt = '';
-            if (Array.isArray(images) && images.length) {
-              // Iterate from largest to smallest size and pick the first non-empty URL
-              for (let i = images.length - 1; i >= 0; i--) {
-                const url = images[i]['#text'];
-                if (url) {
-                  albumArt = url;
-                  break;
-                }
-              }
-            }
-            // Ensure we use HTTPS and avoid referrer leakage for album art
-            if (albumArt && albumArt.startsWith('http://')) {
-              albumArt = albumArt.replace('http://', 'https://');
-            }
-            artEl.src = albumArt || DEFAULT_ALBUM_ART;
-            artEl.referrerPolicy = 'no-referrer';
-            artEl.alt = ((nowTrack.name || '') + ' cover').trim();
-            const trackName = nowTrack.name || '';
-            songEl.textContent = trackName;
-            const artistName = (nowTrack.artist && (nowTrack.artist['#text'] || nowTrack.artist.name)) || '';
-            artistEl.textContent = artistName;
-            playsEl.textContent = '';
-            // Fetch and display the play count if possible
-            if (trackName && artistName) {
-              const playCount = await fetchTrackPlayCount(trackName, artistName);
-              if (playCount) {
-                playsEl.textContent = `Total played times: ${playCount}`;
-              }
-            }
-          } else {
-            // No tracks available
-            songEl.textContent = "It's all quiet for now…";
-            artistEl.textContent = '';
-            playsEl.textContent = '';
-            artEl.src = DEFAULT_ALBUM_ART;
-          }
-        } catch (error) {
-          console.error('Error parsing Last.fm JSONP response:', error);
-          songEl.textContent = "It's all quiet for now…";
-          artistEl.textContent = '';
-          playsEl.textContent = '';
-          artEl.src = DEFAULT_ALBUM_ART;
-        } finally {
-          delete window[callbackName];
-          const script = document.getElementById(callbackName);
-          if (script) {
-            script.remove();
-          }
-        }
-      };
-      const base = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${lastFmUser}&limit=5&api_key=${lastFmApiKey}&format=json`;
-      const jsonpUrl = `${base}&callback=${callbackName}`;
-      const script = document.createElement('script');
-      script.id = callbackName;
-      script.src = jsonpUrl;
-      script.onerror = function() {
-        clearTimeout(timeout);
-        console.error('Error loading Last.fm JSONP script');
-        songEl.textContent = "It's all quiet for now…";
-        artistEl.textContent = '';
-        playsEl.textContent = '';
-        artEl.src = DEFAULT_ALBUM_ART;
-        delete window[callbackName];
-        script.remove();
-      };
-      document.body.appendChild(script);
-    }
-
-    /*
-     * Load top artists via JSONP to bypass CORS restrictions. The function
-     * generates a unique callback name and inserts a script tag that
-     * requests the Last.fm API with the callback parameter. When the
-     * response arrives, it populates the list with artist names and
-     * artwork. If the request fails or times out, a friendly message is
-     * displayed instead.
-     */
-    function fetchTopArtists(period, elementId, limit = 5) {
-      const callbackName = `lastFmTopArtists_${Date.now()}`;
-      const listElement = document.getElementById(elementId);
-      const timeout = setTimeout(() => {
-        console.warn('Top artists JSONP request timed out');
-        listElement.innerHTML = '';
-        const li = document.createElement('li');
-        li.textContent = 'Unable to load data';
-        listElement.appendChild(li);
-        cleanup();
-      }, 8000);
-      function cleanup() {
-        delete window[callbackName];
-        const script = document.getElementById(callbackName);
-        if (script) script.remove();
-      }
-      window[callbackName] = function(data) {
-        clearTimeout(timeout);
-        try {
-          listElement.innerHTML = '';
-          const artists = (data.topartists && data.topartists.artist) || [];
-          if (!artists.length) {
-            const li = document.createElement('li');
-            li.textContent = 'No data';
-            listElement.appendChild(li);
-          } else {
-            artists.slice(0, limit).forEach(artist => {
-              const li = document.createElement('li');
-              const img = document.createElement('img');
-              // Initially set the image to a placeholder. We'll fetch a high quality image
-              // via artist.getInfo using JSONP to avoid CORS issues. The API for
-              // user.getTopArtists often omits usable artwork. Pulling from
-              // artist.getInfo ensures we use the correct artist artwork.
-              img.src = DEFAULT_ALBUM_ART;
-              img.referrerPolicy = 'no-referrer';
-              img.alt = `${artist.name} picture`;
-              img.loading = 'lazy';
-              img.decoding = 'async';
-              li.appendChild(img);
-              const text = document.createElement('span');
-              text.textContent = artist.name;
-              li.appendChild(text);
-              listElement.appendChild(li);
-              // Helper to fetch artist image via JSONP
-              (function(artistName, imageElement) {
-                const cbName = `artistInfoCallback_${Date.now()}_${Math.random().toString().slice(2)}`;
-                window[cbName] = function(infoData) {
-                  try {
-                    let url = '';
-                    const imgs = infoData && infoData.artist && infoData.artist.image ? infoData.artist.image : [];
-                    if (Array.isArray(imgs)) {
-                      for (let j = imgs.length - 1; j >= 0; j--) {
-                        const u = imgs[j]['#text'];
-                        if (u) {
-                          url = u;
-                          break;
-                        }
-                      }
-                    }
-                    if (url && url.startsWith('http://')) {
-                      url = url.replace('http://', 'https://');
-                    }
-                    imageElement.src = url || DEFAULT_ALBUM_ART;
-                  } catch (err) {
-                    imageElement.src = DEFAULT_ALBUM_ART;
-                  } finally {
-                    delete window[cbName];
-                    const s = document.getElementById(cbName);
-                    if (s) s.remove();
-                  }
-                };
-                const apiUrl = `https://ws.audioscrobbler.com/2.0/?method=artist.getInfo&artist=${encodeURIComponent(artistName)}&api_key=${lastFmApiKey}&format=json&callback=${cbName}`;
-                const scriptEl = document.createElement('script');
-                scriptEl.id = cbName;
-                scriptEl.src = apiUrl;
-                scriptEl.onerror = function() {
-                  imageElement.src = DEFAULT_ALBUM_ART;
-                  delete window[cbName];
-                  scriptEl.remove();
-                };
-                document.body.appendChild(scriptEl);
-              })(artist.name, img);
-            });
-          }
-        } catch (err) {
-          console.error('Error processing top artists:', err);
-          listElement.innerHTML = '';
-          const li = document.createElement('li');
-          li.textContent = 'Error loading data';
-          listElement.appendChild(li);
-        } finally {
-          cleanup();
-        }
-      };
-      const url = `https://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user=${lastFmUser}&period=${period}&limit=${limit}&api_key=${lastFmApiKey}&format=json&callback=${callbackName}`;
-      const script = document.createElement('script');
-      script.id = callbackName;
-      script.src = url;
-      script.onerror = function() {
-        clearTimeout(timeout);
-        console.error('Error loading top artists JSONP script');
-        listElement.innerHTML = '';
-        const li = document.createElement('li');
-        li.textContent = 'Unable to load data';
-        listElement.appendChild(li);
-        cleanup();
-      };
-      document.body.appendChild(script);
-    }
-
-    /*
-     * Load top tracks via JSONP. Similar to fetchTopArtists above, this uses
-     * a callback parameter to bypass CORS and then populates the track list
-     * with song names and album artwork.
-     */
-    function fetchTopTracks(period, elementId, limit = 5) {
-      const callbackName = `lastFmTopTracks_${Date.now()}`;
-      const listElement = document.getElementById(elementId);
-      const timeout = setTimeout(() => {
-        console.warn('Top tracks JSONP request timed out');
-        listElement.innerHTML = '';
-        const li = document.createElement('li');
-        li.textContent = 'Unable to load data';
-        listElement.appendChild(li);
-        cleanup();
-      }, 8000);
-      function cleanup() {
-        delete window[callbackName];
-        const script = document.getElementById(callbackName);
-        if (script) script.remove();
-      }
-      window[callbackName] = function(data) {
-        clearTimeout(timeout);
-        try {
-          listElement.innerHTML = '';
-          const tracks = (data.toptracks && data.toptracks.track) || [];
-          if (!tracks.length) {
-            const li = document.createElement('li');
-            li.textContent = 'No data';
-            listElement.appendChild(li);
-          } else {
-            tracks.slice(0, limit).forEach(track => {
-              const li = document.createElement('li');
-              const img = document.createElement('img');
-              // Initially set the image to a placeholder. We'll fetch proper album art
-              // via track.getInfo using JSONP, which includes the album artwork. The
-              // image array returned in user.getTopTracks often does not provide usable
-              // album artwork.
-              img.src = DEFAULT_ALBUM_ART;
-              img.referrerPolicy = 'no-referrer';
-              img.alt = `${track.name} artwork`;
-              img.loading = 'lazy';
-              img.decoding = 'async';
-              li.appendChild(img);
-              const text = document.createElement('span');
-              text.textContent = track.name;
-              li.appendChild(text);
-              listElement.appendChild(li);
-              // Helper to fetch track image via JSONP. We'll attempt to load the
-              // album cover from track.getInfo, falling back to the placeholder on
-              // failure.
-              (function(trackName, artistName, imageElement) {
-                const cbName = `trackInfoCallback_${Date.now()}_${Math.random().toString().slice(2)}`;
-                window[cbName] = function(infoData) {
-                  try {
-                    let url = '';
-                    // Try to extract the album image if available
-                    const album = infoData && infoData.track && infoData.track.album;
-                    const imgs = album && album.image ? album.image : [];
-                    if (Array.isArray(imgs)) {
-                      for (let j = imgs.length - 1; j >= 0; j--) {
-                        const u = imgs[j]['#text'];
-                        if (u) {
-                          url = u;
-                          break;
-                        }
-                      }
-                    }
-                    // Fallback: some tracks might provide images directly
-                    if (!url) {
-                      const directImgs = infoData && infoData.track && infoData.track.image ? infoData.track.image : [];
-                      if (Array.isArray(directImgs)) {
-                        for (let j = directImgs.length - 1; j >= 0; j--) {
-                          const u2 = directImgs[j]['#text'];
-                          if (u2) {
-                            url = u2;
-                            break;
-                          }
-                        }
-                      }
-                    }
-                    if (url && url.startsWith('http://')) {
-                      url = url.replace('http://', 'https://');
-                    }
-                    imageElement.src = url || DEFAULT_ALBUM_ART;
-                  } catch (err) {
-                    imageElement.src = DEFAULT_ALBUM_ART;
-                  } finally {
-                    delete window[cbName];
-                    const s = document.getElementById(cbName);
-                    if (s) s.remove();
-                  }
-                };
-                const apiUrl = `https://ws.audioscrobbler.com/2.0/?method=track.getInfo&artist=${encodeURIComponent(artistName)}&track=${encodeURIComponent(trackName)}&api_key=${lastFmApiKey}&format=json&callback=${cbName}`;
-                const scriptEl = document.createElement('script');
-                scriptEl.id = cbName;
-                scriptEl.src = apiUrl;
-                scriptEl.onerror = function() {
-                  imageElement.src = DEFAULT_ALBUM_ART;
-                  delete window[cbName];
-                  scriptEl.remove();
-                };
-                document.body.appendChild(scriptEl);
-              })(track.name, track.artist && track.artist.name ? track.artist.name : '', img);
-            });
-          }
-        } catch (err) {
-          console.error('Error processing top tracks:', err);
-          listElement.innerHTML = '';
-          const li = document.createElement('li');
-          li.textContent = 'Error loading data';
-          listElement.appendChild(li);
-        } finally {
-          cleanup();
-        }
-      };
-      const url = `https://ws.audioscrobbler.com/2.0/?method=user.gettoptracks&user=${lastFmUser}&period=${period}&limit=${limit}&api_key=${lastFmApiKey}&format=json&callback=${callbackName}`;
-      const script = document.createElement('script');
-      script.id = callbackName;
-      script.src = url;
-      script.onerror = function() {
-        clearTimeout(timeout);
-        console.error('Error loading top tracks JSONP script');
-        listElement.innerHTML = '';
-        const li = document.createElement('li');
-        li.textContent = 'Unable to load data';
-        listElement.appendChild(li);
-        cleanup();
-      };
-      document.body.appendChild(script);
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      fetchNowPlaying();
-      fetchTopArtists('1month', 'top-artists-month', 5);
-      fetchTopTracks('1month', 'top-tracks-month', 5);
-    });
-  </script>
 </body>
 </html>

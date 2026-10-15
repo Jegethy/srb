@@ -18,20 +18,28 @@
   --dark-grey: #1a1a1d;
   --light-grey: #c5c6c7;
   --matte-red: #b21e35;
+  --bright-red: #d82745;
   --header-height: 60px;
   --footer-height: 60px;
+  /* Height available between the header and footer, used to keep the gallery on screen */
+  --content-height: calc(100dvh - var(--header-height) - var(--footer-height) - 2rem);
   --font-heading: 'Montserrat', sans-serif;
   --font-body: 'Roboto', sans-serif;
 }
 
+/*
+ * The header, main content and footer stack in a column that fills the
+ * viewport. Pages that fit are laid out exactly on screen; pages that don't
+ * (small phones, short laptop screens) scroll instead of being clipped.
+ */
 body {
   font-family: var(--font-body);
   color: var(--light-grey);
   background-color: var(--carbon-black);
-  height: 100vh;
+  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 a {
@@ -40,21 +48,16 @@ a {
   transition: color 0.3s ease, background-color 0.3s ease;
 }
 
-/*
- * Remove the dashed outline on focused links. The dashed outline was
- * originally used to indicate keyboard focus but resulted in a
- * distracting red box around links after clicking. Setting the
- * outline to none avoids this effect while preserving hover/focus
- * colour changes defined elsewhere.
- */
-a:focus {
-  outline: none;
-  outline-offset: 0;
+/* Visible focus ring for keyboard users only; mouse clicks don't show it. */
+:focus-visible {
+  outline: 2px solid var(--matte-red);
+  outline-offset: 3px;
 }
 
 /* Header styles */
 .header {
   height: var(--header-height);
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -79,7 +82,7 @@ a:focus {
 
 .nav a {
   font-family: var(--font-heading);
-  font-weight: 500;
+  font-weight: 600;
   text-transform: uppercase;
   font-size: 0.9rem;
   letter-spacing: 0.05em;
@@ -87,12 +90,9 @@ a:focus {
 }
 
 /* Highlight the current page's navigation link in the matte red accent. */
-.nav a.active {
-  color: var(--matte-red);
-}
-
+.nav a[aria-current='page'],
 .nav a:hover,
-.nav a:focus {
+.nav a:focus-visible {
   color: var(--matte-red);
 }
 
@@ -102,6 +102,8 @@ a:focus {
   justify-content: space-between;
   width: 24px;
   height: 18px;
+  background: none;
+  border: 0;
   cursor: pointer;
 }
 
@@ -113,27 +115,26 @@ a:focus {
   transition: background-color 0.3s ease;
 }
 
-.hamburger:hover span {
+.hamburger:hover span,
+.hamburger[aria-expanded='true'] span {
   background-color: var(--matte-red);
 }
 
-/* Footer styles */
 /*
  * Footer styles
- * The footer should blend seamlessly with the carbon black background of
- * the pages. Rather than colouring the entire bar red, the text and
- * icons use the matte red accent colour by default. When hovering
- * over the footer the copy and icons fade to the light grey/silver
- * colour but the background remains unchanged. A subtle top border
- * helps delineate the footer from the main content.
+ * The footer blends with the carbon black background. The copyright text
+ * and icons use the matte red accent; each icon fades to light grey when
+ * hovered. A subtle top border separates the footer from the content.
  */
 .footer {
-  height: var(--footer-height);
+  min-height: var(--footer-height);
+  flex-shrink: 0;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  padding: 0 1.5rem;
+  gap: 0.5rem 1rem;
+  padding: 0.5rem 1.5rem;
   background-color: var(--carbon-black);
   color: var(--matte-red);
   font-size: 0.8rem;
@@ -145,14 +146,6 @@ a:focus {
   gap: 1rem;
 }
 
-/* Footer social icons: default fill is dark when on the red footer.
-   The fill swaps to red when hovering the entire footer. */
-/*
- * Default footer icon colour uses the matte red accent so the icons
- * stand out against the carbon black footer. When the user hovers over
- * the footer the icons transition to the light grey colour defined
- * globally.
- */
 .footer-social a svg {
   width: 20px;
   height: 20px;
@@ -160,30 +153,17 @@ a:focus {
   transition: fill 0.3s ease;
 }
 
-/*
- * Individual icon hover: change only the hovered social icon to the
- * light grey/silver colour. Other icons and the copyright text
- * remain in the matte red accent colour.
- */
 .footer-social a:hover svg,
-.footer-social a:focus svg {
+.footer-social a:focus-visible svg {
   fill: var(--light-grey);
 }
 
-/*
- * Remove the footer-wide hover effect. The copyright text retains
- * the matte red accent at all times and does not react to mouse
- * interaction. Social icons will change colour individually on
- * hover (see rules below).
- */
-
-/* Main container */
+/* Main container: fills the space between header and footer and centres its content */
 main {
-  flex-grow: 1;
+  flex: 1 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: calc(100vh - var(--header-height) - var(--footer-height));
   padding: 1rem;
 }
 
@@ -194,17 +174,11 @@ main {
   gap: 3rem;
 }
 
-/*
- * Profile image styling for the landing page. On the home page the
- * portrait should simply float on the dark background without any
- * coloured border. Keep a slight rounding on the corners for a
- * softer appearance.
- */
+/* The portrait floats on the dark background with slightly rounded corners. */
 .profile-img {
   max-width: 300px;
   width: 35vw;
-  /* remove the matte red border from around the portrait */
-  border: none;
+  height: auto;
   border-radius: 8px;
 }
 
@@ -227,12 +201,20 @@ main {
   margin-bottom: 1rem;
 }
 
-.social-icons {
+/* Round social icon buttons on the home and contact pages */
+.social-icons,
+.contact-social {
   display: flex;
   gap: 1rem;
 }
 
-.social-icons a {
+.contact-social {
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.social-icons a,
+.contact-social a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -244,55 +226,36 @@ main {
   transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
 }
 
-.social-icons a svg {
+.social-icons a svg,
+.contact-social a svg {
   width: 20px;
   height: 20px;
   fill: currentColor;
 }
 
 .social-icons a:hover,
-.social-icons a:focus {
+.social-icons a:focus-visible,
+.contact-social a:hover,
+.contact-social a:focus-visible {
   background-color: var(--matte-red);
   color: var(--carbon-black);
   transform: translateY(-2px);
 }
 
-/* About page */
-/*
- * Layout container for the about page. Previously this used a dark card
- * panel with a matte red border and shadow. To satisfy the updated
- * requirements, remove the panel styling entirely – the content floats
- * directly on the page background. Maintain spacing and flexible
- * alignment so the image, heading and text still present well on
- * desktop and mobile.
- */
+/* Divider used to separate headings from body text on the About and Contact pages */
+.divider {
+  width: 100%;
+  height: 2px;
+  background-color: var(--matte-red);
+  margin: 0.75rem 0;
+  border-radius: 1px;
+}
+
+/* About page: the text floats directly on the page background */
 .about-card {
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-  /* Remove panel styling */
-  background-color: transparent;
-  padding: 1.5rem;
-  border-radius: 0;
-  box-shadow: none;
   max-width: 900px;
   width: 100%;
-}
-
-/*
- * Portrait on the about page. Remove the coloured border to keep the
- * image clean against the dark background. Preserve the rounded
- * corners for consistency with the landing page portrait.
- */
-.about-card img {
-  width: 40%;
-  max-width: 280px;
-  border: none;
-  border-radius: 8px;
-}
-
-.bio {
-  flex: 1;
+  padding: 1.5rem;
 }
 
 .bio h2 {
@@ -304,67 +267,69 @@ main {
 
 .bio p {
   font-size: clamp(0.9rem, 2vw, 1.1rem);
-  line-height: 1.5;
+  line-height: 1.7;
+  margin-bottom: 1.2rem;
   color: var(--light-grey);
 }
 
+.bio-intro {
+  font-size: 1.05rem;
+}
+
+.bio-music {
+  opacity: 0.95;
+}
+
+.bio .about-signoff {
+  margin-top: 1.8rem;
+  font-style: italic;
+  opacity: 0.85;
+}
+
+.bio a {
+  color: var(--matte-red);
+  font-style: italic;
+  font-weight: 500;
+  transition: color 0.2s ease, text-shadow 0.2s ease;
+}
+
+.bio a:hover,
+.bio a:focus-visible {
+  color: #ff4a4a;
+  text-shadow: 0 0 6px rgba(255, 74, 74, 0.35);
+}
+
 /* Gallery page */
-/*
- * Container for the gallery page. Align children centrally and
- * allow them to take up only as much space as needed. The width is
- * kept to 100% to ensure the heading spans the available space.
- */
 .main-gallery {
   display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
   width: 100%;
-  height: 100%;
 }
 
-.main-gallery h2 {
-  font-family: var(--font-heading);
-  color: var(--matte-red);
-  font-size: clamp(2rem, 4vw, 3rem);
-  margin-bottom: 1rem;
-}
-
+/*
+ * A square 3×3 grid of thumbnails. The width scales with the viewport at
+ * each breakpoint, and is also capped by the available height so the whole
+ * grid stays on screen on short displays.
+ */
 .gallery-grid {
-  /*
-   * The gallery grid normally filled the entire width of the page. To
-   * create a more compact, centred gallery the grid is constrained
-   * horizontally and given an aspect ratio. This ensures the six
-   * thumbnails fit neatly without stretching edge‑to‑edge. The
-   * aspect-ratio of 3/2 maintains two rows across three columns. On
-   * smaller screens the media queries below adjust the column count
-   * while still respecting the max-width and aspect ratio.
-   */
-  flex-grow: 0;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  /* With nine images the grid now has three rows and three columns.
-     The aspect ratio is set to 1:1 so the grid forms a square. */
   grid-template-rows: repeat(3, 1fr);
   gap: 1rem;
   width: 60%;
-  max-width: 600px;
-  /* Square aspect ratio for a 3×3 grid */
+  max-width: min(600px, var(--content-height));
   aspect-ratio: 1 / 1;
-  margin: 0 auto;
 }
 
 .gallery-grid a {
-  position: relative;
-  width: 100%;
-  height: 100%;
   overflow: hidden;
   border-radius: 6px;
-  /* Enable a 3D perspective for a subtle tilt/parallax effect on hover */
+  /* 3D perspective for the tilt effect added in main.js */
   perspective: 600px;
 }
 
 .gallery-grid img {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -373,27 +338,10 @@ main {
   transition: border-color 0.3s ease, transform 0.3s ease;
 }
 
-.gallery-grid img:hover,
-.gallery-grid img:focus {
+.gallery-grid a:hover img,
+.gallery-grid a:focus-visible img {
   border-color: var(--matte-red);
   transform: scale(1.05);
-}
-
-/* Music page */
-.music-section {
-  text-align: center;
-}
-
-.music-section h2 {
-  font-family: var(--font-heading);
-  color: var(--matte-red);
-  font-size: clamp(2rem, 4vw, 3rem);
-  margin-bottom: 0.5rem;
-}
-
-.music-section p {
-  font-size: clamp(1rem, 2vw, 1.2rem);
-  color: var(--light-grey);
 }
 
 /* Contact page */
@@ -415,199 +363,128 @@ main {
   color: var(--light-grey);
 }
 
-/* Divider used to separate headings from body text on About and Contact pages */
-/*
- * Horizontal dividing line used in the About and Contact pages. The line
- * spans the full width of its parent container so that it aligns with
- * the width of the text block. It scales responsively with the page
- * size. A small vertical margin separates it from adjacent headings
- * and paragraphs.
- */
-.divider {
+/* Music page: a "Now Playing" block above two lists of top artists and tracks */
+.music-container {
+  max-width: 900px;
   width: 100%;
-  height: 2px;
-  background-color: var(--matte-red);
-  margin: 0.75rem 0;
-  border-radius: 1px;
-}
-
-.contact-social {
   display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-.contact-social a {
-  display: inline-flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border: 2px solid var(--matte-red);
-  border-radius: 50%;
-  color: var(--light-grey);
-  transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
 }
 
-.contact-social a svg {
-  width: 20px;
-  height: 20px;
-  fill: currentColor;
-}
-
-.contact-social a:hover,
-.contact-social a:focus {
-  background-color: var(--matte-red);
-  color: var(--carbon-black);
-  transform: translateY(-2px);
-}
-
-/* Responsive adjustments */
-@media (max-width: 900px) {
-  .about-card {
-    flex-direction: column;
-    text-align: center;
-  }
-  .about-card img {
-    width: 60%;
-    margin-bottom: 1rem;
-  }
-  .home-container {
-    flex-direction: column;
-    text-align: center;
-  }
-  .home-text {
-    align-items: center;
-  }
-}
-
-@media (max-width: 768px) {
-  .nav ul {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  .nav {
-    position: absolute;
-    top: var(--header-height);
-    right: 0;
-    background-color: var(--dark-grey);
-    width: 200px;
-    transform: translateX(100%);
-    transition: transform 0.3s ease;
-    padding: 1rem;
-  }
-  .nav.active {
-    transform: translateX(0);
-  }
-  .hamburger {
-    display: flex;
-  }
-  .nav a {
-    display: block;
-    padding: 0.5rem 0;
-  }
-  /* Gallery layout on smaller screens */
-  .gallery-grid {
-    /* Maintain a 3×3 layout for nine images on smaller screens
-       while scaling the overall size down */
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(3, 1fr);
-    width: 80%;
-    max-width: 500px;
-    aspect-ratio: 1 / 1;
-  }
-}
-
-@media (max-width: 480px) {
-  /* Extra small screens still keep a 3×3 grid but shrink width further */
-  .gallery-grid {
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(3, 1fr);
-    width: 90%;
-    max-width: 400px;
-    aspect-ratio: 1 / 1;
-  }
-}
-
-/* On very wide screens, allow the gallery to grow larger so it doesn't look sparse.
-   The width is reduced to 40% of the viewport but capped at 900px. */
-@media (min-width: 1200px) {
-  .gallery-grid {
-    width: 40%;
-    max-width: 900px;
-  }
-}
-
-/* ------------------------------------------------------------------
-   Error page styles
-
-   These classes are used on the 404.html and 500.html pages. They
-   centre the content vertically and horizontally and provide a
-   consistent appearance that matches the rest of the site. The button
-   inherits the accent colour and inverts on hover for an inviting
-   call‑to‑action.  */
-
-.error-page {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-}
-
-.error-container {
-  max-width: 600px;
-  width: 80%;
-}
-
-.error-code {
-  font-family: var(--font-heading);
-  font-size: clamp(4rem, 10vw, 8rem);
-  color: var(--matte-red);
-  margin-bottom: 0.5rem;
-}
-
-.error-message {
-  font-size: clamp(1rem, 3vw, 1.5rem);
-  color: var(--light-grey);
+.now-playing-block {
+  width: 100%;
   margin-bottom: 2rem;
 }
 
-.button {
-  display: inline-block;
-  padding: 0.75rem 1.5rem;
-  border: 2px solid var(--matte-red);
-  border-radius: 4px;
-  color: var(--light-grey);
-  text-decoration: none;
-  transition: background-color 0.3s ease, color 0.3s ease;
-  font-family: var(--font-heading);
-  font-weight: 600;
+.now-playing-content {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
 }
 
-.button:hover,
-.button:focus {
+.now-playing-content img {
+  width: 200px;
+  height: 200px;
+  flex-shrink: 0;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 2px solid var(--matte-red);
+}
+
+.now-playing-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.now-playing-info .song-title {
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--matte-red);
+  line-height: 1.2;
+  margin-bottom: 0.2rem;
+  overflow-wrap: anywhere;
+}
+
+.now-playing-info .artist-name {
+  font-size: 1.3rem;
+  font-weight: 500;
+  margin-bottom: 0.2rem;
+}
+
+.now-playing-info .play-count {
+  font-size: 0.8rem;
+}
+
+.top-lists {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+}
+
+.top-list {
+  flex: 1;
+  min-width: 250px;
+}
+
+.top-list h3 {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  color: var(--matte-red);
+  margin-bottom: 1rem;
+}
+
+.top-list ul {
+  list-style: none;
+}
+
+.top-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.top-list li img {
+  width: 50px;
+  height: 50px;
+  flex-shrink: 0;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 2px solid var(--dark-grey);
+}
+
+.lastfm-link-wrapper {
+  margin-top: 2rem;
+}
+
+.lastfm-button {
+  display: inline-block;
   background-color: var(--matte-red);
-  color: var(--carbon-black);
+  padding: 0.6rem 1.6rem;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  border-radius: 4px;
+}
+
+.lastfm-button:hover,
+.lastfm-button:focus-visible {
+  background-color: var(--bright-red);
 }
 
 /*
- * Error page split layout
- *
- * The error pages (404 and 500) display an illustration on the left and the error
- * message on the right with a vertical divider. On smaller screens the
- * layout stacks vertically and hides the divider for better readability.
+ * Error pages (404 and 500)
+ * An illustration on the left and the message on the right, separated by a
+ * vertical divider. On smaller screens the layout stacks and the divider hides.
  */
-
 .error-layout {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 80%;
   max-width: 900px;
-  margin: 0 auto;
-  gap: 0;
 }
 
 .error-img {
@@ -616,10 +493,9 @@ main {
 }
 
 .error-img img {
+  display: block;
   width: 100%;
   height: auto;
-  display: block;
-  object-fit: contain;
 }
 
 .error-divider {
@@ -632,10 +508,95 @@ main {
 
 .error-content {
   flex: 1;
-  text-align: left;
+}
+
+.error-code {
+  font-family: var(--font-heading);
+  font-size: clamp(4rem, 10vw, 8rem);
+  color: var(--matte-red);
+  margin-bottom: 0.5rem;
+}
+
+.error-message {
+  font-size: clamp(1rem, 3vw, 1.5rem);
+  margin-bottom: 2rem;
+}
+
+/* Outlined button that fills with the accent colour on hover */
+.button {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  border: 2px solid var(--matte-red);
+  border-radius: 4px;
+  font-family: var(--font-heading);
+  font-weight: 600;
+}
+
+.button:hover,
+.button:focus-visible {
+  background-color: var(--matte-red);
+  color: var(--carbon-black);
+}
+
+/* Responsive adjustments */
+@media (min-width: 1200px) {
+  /* Let the gallery grow on wide screens so it doesn't look sparse */
+  .gallery-grid {
+    width: 40%;
+    max-width: min(900px, var(--content-height));
+  }
+}
+
+@media (max-width: 900px) {
+  .home-container {
+    flex-direction: column;
+    text-align: center;
+  }
+  .home-text {
+    align-items: center;
+  }
+  .about-card {
+    text-align: center;
+  }
 }
 
 @media (max-width: 768px) {
+  /* The navigation becomes an off-canvas menu toggled by the hamburger button */
+  .hamburger {
+    display: flex;
+  }
+  .nav {
+    /* Fixed (not absolute) so the off-screen menu doesn't widen the page on mobile */
+    position: fixed;
+    top: var(--header-height);
+    right: 0;
+    width: 200px;
+    padding: 1rem;
+    background-color: var(--dark-grey);
+    transform: translateX(100%);
+    /* Hidden menus are also removed from the tab order once the slide-out finishes */
+    visibility: hidden;
+    transition: transform 0.3s ease, visibility 0s linear 0.3s;
+  }
+  .nav.active {
+    transform: translateX(0);
+    visibility: visible;
+    transition: transform 0.3s ease;
+  }
+  .nav ul {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .nav a {
+    display: block;
+    padding: 0.5rem 0;
+  }
+
+  .gallery-grid {
+    width: 80%;
+    max-width: min(500px, var(--content-height));
+  }
+
   .error-layout {
     flex-direction: column;
   }
@@ -651,166 +612,37 @@ main {
   }
 }
 
-.bio p {
-  margin-bottom: 1.2rem;
-  line-height: 1.7;
+@media (max-width: 600px) {
+  /* Stack the now playing artwork above the track details */
+  .now-playing-content {
+    flex-direction: column;
+    text-align: center;
+  }
+  .now-playing-content img {
+    width: 160px;
+    height: 160px;
+  }
+  .now-playing-info .song-title {
+    font-size: 1.6rem;
+  }
 }
 
-.bio-intro {
-  font-size: 1.05rem;
+@media (max-width: 480px) {
+  .gallery-grid {
+    width: 90%;
+    max-width: 400px;
+  }
 }
 
-.bio-music {
-  opacity: 0.95;
-}
-
-.about-signoff {
-  margin-top: 1.8rem;
-  font-style: italic;
-  opacity: 0.85;
-}
-
-.bio a {
-  color: var(--accent-red);
-  font-style: italic;
-  font-weight: 500;
-  text-decoration: none;
-  transition: color 0.2s ease, opacity 0.2s ease, text-shadow 0.2s ease;
-}
-
-.bio a:hover,
-.bio a:focus {
-  color: #ff4a4a;
-  opacity: 0.9;
-  text-shadow: 0 0 6px rgba(255, 74, 74, 0.35);
-}
-
-/* === Music page styles ===
- * These rules style the music page without affecting other pages. They control
- * the layout of the now playing section and the top lists.
- */
-.music .music-container {
-  max-width: 900px;
-  width: 100%;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: left;
-}
-
-.music .now-playing-block {
-  width: 100%;
-  margin-bottom: 2rem;
-}
-
-.music .now-playing-content {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-}
-
-.music .now-playing-content img {
-  width: 200px;
-  height: 200px;
-  object-fit: cover;
-  border-radius: 6px;
-  border: 2px solid var(--matte-red);
-}
-
-.music .now-playing-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.music .now-playing-info .song-title {
-  font-family: var(--font-heading);
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--matte-red);
-  line-height: 1.2;
-  margin-bottom: 0.2rem;
-}
-
-.music .now-playing-info .artist-name {
-  font-size: 1.3rem;
-  font-weight: 500;
-  color: var(--light-grey);
-  margin-bottom: 0.2rem;
-}
-
-.music .now-playing-info .play-count {
-  font-size: 0.8rem;
-  color: var(--light-grey);
-}
-
-.music .top-artists-blocks {
-  width: 100%;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 2rem;
-}
-
-.music .top-artists-block {
-  flex: 1;
-  min-width: 250px;
-}
-
-.music .top-artists-block h3 {
-  font-family: var(--font-heading);
-  font-size: 1.5rem;
-  color: var(--matte-red);
-  margin-bottom: 1rem;
-  text-align: left;
-}
-
-.music .top-artists-block ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.music .top-artists-block li {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
-}
-
-.music .top-artists-block li img {
-  width: 50px;
-  height: 50px;
-  object-fit: cover;
-  border-radius: 4px;
-  border: 2px solid var(--dark-grey);
-}
-
-.music .top-artists-block li span {
-  font-size: 1rem;
-  color: var(--light-grey);
-}
-
-.music .lastfm-link-wrapper {
-  width: 100%;
-  margin-top: 2rem;
-  text-align: center;
-}
-
-.music .lastfm-button {
-  display: inline-block;
-  background-color: var(--matte-red);
-  color: var(--light-grey);
-  padding: 0.6rem 1.6rem;
-  font-family: var(--font-heading);
-  font-weight: 600;
-  border-radius: 4px;
-  transition: background-color 0.3s ease;
-}
-
-.music .lastfm-button:hover,
-.music .lastfm-button:focus {
-  background-color: #d82745;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
+  .social-icons a:hover,
+  .contact-social a:hover,
+  .gallery-grid a:hover img {
+    transform: none;
+  }
 }
